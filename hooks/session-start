@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# SessionStart hook for figma-plugin-forge plugin
+# Reads the using-figma-plugin-forge skill and outputs it as session context
+# Adapted from the superpowers pattern (https://github.com/obra/superpowers)
+
+set -euo pipefail
+
+# Determine plugin root directory (one level up from hooks/)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+SKILL_FILE="${PLUGIN_ROOT}/skills/using-figma-plugin-forge/SKILL.md"
+
+# Check if the skill file exists
+if [ ! -f "$SKILL_FILE" ]; then
+  # Skill file not found — output empty context and exit gracefully
+  echo '{"hookSpecificOutput":{"additionalContext":""}}'
+  exit 0
+fi
+
+# Read the skill file content
+skill_content=$(cat "$SKILL_FILE" 2>/dev/null || echo "")
+
+# Strip YAML frontmatter (everything between leading --- markers)
+skill_content=$(echo "$skill_content" | sed '1{/^---$/d}' | sed '1,/^---$/d')
+
+# Escape string for JSON embedding
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+escaped_content=$(escape_for_json "$skill_content")
+
+# Output platform-aware JSON
+# Cursor sets CURSOR_PLUGIN_ROOT
+# Claude Code sets CLAUDE_PLUGIN_ROOT
+# Others get a generic fallback
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+  printf '{\n  "additional_context": "%s"\n}\n' "$escaped_content"
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$escaped_content"
+else
+  printf '{\n  "additionalContext": "%s"\n}\n' "$escaped_content"
+fi
+
+exit 0

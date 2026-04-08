@@ -1,0 +1,15 @@
+{
+  "name": "figma-plugin-forge",
+  "description": "Framework for building Figma plugins with AI-assisted spec-driven development. Includes brainstorming, planning, and Figma API guidance skills.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Antonio Salgado"
+  },
+  "homepage": "https://github.com/sallzzbr/figma-plugin-forge",
+  "repository": "https://github.com/sallzzbr/figma-plugin-forge",
+  "license": "MIT",
+  "keywords": ["figma", "plugin", "design-system", "preact", "tailwind", "spec-driven"],
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "hooks": "./hooks/hooks-cursor.json"
+}
