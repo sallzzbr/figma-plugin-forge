@@ -176,7 +176,7 @@ If the plugin CAN work without a backend (even with reduced functionality), reco
 
 ### Reuse Before Building
 
-Check if existing shared components, services, or patterns already solve the problem. The shared package (`@mt-figma/shared`) has UI components, services, and types that cover common needs.
+Check if existing shared components, services, or patterns already solve the problem. The shared package (`@figma-forge/shared`) has UI components, services, and types that cover common needs.
 
 ### One Plugin, One Job
 
