@@ -1,0 +1,19 @@
+{
+  "api": "1.0.0",
+  "editorType": [
+    "figma"
+  ],
+  "id": "YOUR_PLUGIN_ID",
+  "name": "DS Library Sync",
+  "main": "build/main.js",
+  "ui": "build/ui.html",
+  "permissions": [],
+  "documentAccess": "dynamic-page",
+  "enablePrivatePluginApi": true,
+  "enableProposedApi": false,
+  "networkAccess": {
+    "allowedDomains": [
+      "https://YOUR_PROJECT_ID.supabase.co"
+    ]
+  }
+}
