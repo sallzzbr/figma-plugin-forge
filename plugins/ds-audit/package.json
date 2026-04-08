@@ -1,0 +1,45 @@
+{
+  "name": "@figma-forge/ds-audit",
+  "private": true,
+  "dependencies": {
+    "@figma-forge/shared": "*",
+    "@create-figma-plugin/ui": "^4.0.1",
+    "@create-figma-plugin/utilities": "^4.0.1",
+    "clsx": "^2.1.1",
+    "preact": ">=10"
+  },
+  "devDependencies": {
+    "@create-figma-plugin/build": "^4.0.1",
+    "@create-figma-plugin/tsconfig": "^4.0.1",
+    "@figma/plugin-typings": "1.109.0",
+    "@tailwindcss/cli": "^4.1.11",
+    "concurrently": ">=8",
+    "tailwindcss": "^4.1.11",
+    "typescript": ">=5"
+  },
+  "scripts": {
+    "dev": "npm run build && npm run watch",
+    "build": "npm run build:css && npm run build:js && npm run build:html",
+    "build:css": "tailwindcss --input ./src/input.css --output ./src/output.css",
+    "build:js": "build-figma-plugin --typecheck --minify",
+    "build:html": "node ../../packages/shared/scripts/build-html.js",
+    "watch": "npm run build:css && concurrently npm:watch:css npm:watch:js",
+    "watch:css": "tailwindcss --input ./src/input.css --output ./src/output.css --watch",
+    "watch:js": "build-figma-plugin --typecheck --watch"
+  },
+  "figma-plugin": {
+    "editorType": [
+      "figma",
+      "dev"
+    ],
+    "capabilities": [
+      "inspect"
+    ],
+    "id": "YOUR_PLUGIN_ID",
+    "name": "DS Audit",
+    "main": "src/main.ts",
+    "ui": "src/ui.tsx",
+    "permissions": [],
+    "documentAccess": "dynamic-page"
+  }
+}

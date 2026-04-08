@@ -1,0 +1,16 @@
+{
+  "api": "1.0.0",
+  "editorType": [
+    "figma",
+    "dev"
+  ],
+  "id": "YOUR_PLUGIN_ID",
+  "name": "DS Audit",
+  "main": "build/main.js",
+  "ui": "build/ui.html",
+  "capabilities": [
+    "inspect"
+  ],
+  "permissions": [],
+  "documentAccess": "dynamic-page"
+}
