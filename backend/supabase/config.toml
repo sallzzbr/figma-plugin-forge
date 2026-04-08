@@ -1,0 +1,17 @@
+# Supabase project configuration for figma-plugin-forge backend.
+# See https://supabase.com/docs/guides/cli/config for full reference.
+
+[api]
+port = 54321
+
+[db]
+port = 54322
+
+[studio]
+port = 54323
+
+# Edge Functions
+[functions]
+# Functions are deployed from supabase/functions/
+# Deploy all:  supabase functions deploy
+# Deploy one:  supabase functions deploy analyze
