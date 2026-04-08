@@ -1,0 +1,14 @@
+{
+  "api": "1.0.0",
+  "editorType": ["figma", "figjam"],
+  "id": "ui-review-dev",
+  "name": "UI Review",
+  "main": "build/main.js",
+  "ui": "build/ui.html",
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": [
+      "https://YOUR_PROJECT_ID.supabase.co"
+    ]
+  }
+}
