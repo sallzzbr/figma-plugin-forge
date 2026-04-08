@@ -1,0 +1,25 @@
+{
+  "name": "figma-plugin-forge",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Open-source framework for building Figma plugins with AI-assisted spec-driven development",
+  "workspaces": [
+    "packages/*",
+    "plugins/*",
+    "backend"
+  ],
+  "scripts": {
+    "ds-audit:dev": "npm run dev -w plugins/ds-audit",
+    "ds-audit:build": "npm run build -w plugins/ds-audit",
+    "ui-review:dev": "npm run dev -w plugins/ui-review",
+    "ui-review:build": "npm run build -w plugins/ui-review",
+    "ds-library-sync:dev": "npm run dev -w plugins/ds-library-sync",
+    "ds-library-sync:build": "npm run build -w plugins/ds-library-sync",
+    "spec-generator:dev": "npm run dev -w plugins/spec-generator",
+    "spec-generator:build": "npm run build -w plugins/spec-generator",
+    "build:all": "npm run build -ws --if-present"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
