@@ -1,7 +1,7 @@
 {
   "name": "figma-plugin-forge",
   "description": "Optional Cursor-facing adapter metadata for the docs-first figma-plugin-forge method. Canonical guidance lives in AGENTS.md and docs/.",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "author": {
     "name": "Antonio Salgado"
   },

@@ -24,12 +24,14 @@ Install this repo's skills or adapter assets into another assistant context, so 
 
 ## Support matrix
 
-| Assistant | Repo mode | Bundle mode | Current limitation |
+| Assistant | Repo mode | Bundle mode | Install method |
 | --- | --- | --- | --- |
-| Any AI | Yes | N/A | None beyond the host reading repo files |
-| Claude | Yes | Metadata only (`.claude-plugin/plugin.json`) | No dedicated hook or skill bundle in this cycle |
-| Cursor | Yes | Optional hook adapter via `.cursor-plugin/plugin.json` and `hooks/hooks-cursor.json` | Paths in `plugin.json` resolve from the workspace root, so the Cursor bundle assumes this repo is the Cursor workspace; it is not a portable drop-in for arbitrary repos |
-| Codex | Yes | Not shipped this cycle | `.codex/README.md` documents the AGENTS-first path only |
+| Any AI | Yes | N/A | `git clone` + read `AGENTS.md` |
+| Claude Code | Yes | Yes (marketplace) | `/plugin marketplace add sallzzbr/figma-plugin-forge-marketplace` then `/plugin install figma-plugin-forge@figma-plugin-forge-marketplace` |
+| Cursor | Yes | Adapter only (workspace-root) | `git clone` and open as Cursor workspace |
+| Codex | Yes | Not shipped this cycle | `git clone` + read `AGENTS.md` |
+
+Claude Code marketplace install is the recommended path for bundle mode. It installs skills and agents directly into your Claude Code environment so they trigger automatically in any workspace.
 
 See [assistant-integrations.md](assistant-integrations.md) for per-assistant asset inventory and runtime requirements.
 

@@ -18,23 +18,25 @@ There's a bunch more to it — snippets, templates, examples, a validation scrip
 
 > **If you are an AI or agent**, start with [`AGENTS.md`](AGENTS.md).
 
-Installation differs by platform. Some have full adapter support, others use the docs-first path directly. See [distribution modes](docs/guides/distribution-modes.md) for the full explanation.
+Installation differs by platform. Claude Code supports marketplace install; other platforms use git clone. See [distribution modes](docs/guides/distribution-modes.md) for the full explanation.
 
-### Claude Code
-
-Clone the repo and use it as a reference workspace, or install as a plugin:
+### Claude Code (Marketplace)
 
 ```shell
-# Option 1: Clone as workspace (full access to all docs, patterns, examples)
-git clone https://github.com/sallzzbr/figma-plugin-forge.git
-cd figma-plugin-forge
-# Start Claude Code — it reads AGENTS.md automatically
+# 1. Add the marketplace
+/plugin marketplace add sallzzbr/figma-plugin-forge-marketplace
 
-# Option 2: Install as plugin (skills only, bundle mode)
-claude plugin add sallzzbr/figma-plugin-forge
+# 2. Install the plugin
+/plugin install figma-plugin-forge@figma-plugin-forge-marketplace
 ```
 
-**Status:** Repo mode fully supported. Plugin mode provides metadata only (`.claude-plugin/plugin.json`); no dedicated hook adapter in this cycle.
+This installs the skills, agents, and docs as a Claude Code plugin. Skills trigger automatically during your workflow.
+
+**Want full access to all patterns, examples, and guides?** Clone the repo as a workspace alongside your target repo:
+
+```shell
+git clone https://github.com/sallzzbr/figma-plugin-forge.git
+```
 
 ### Cursor
 
@@ -44,12 +46,11 @@ git clone https://github.com/sallzzbr/figma-plugin-forge.git
 # Open the folder in Cursor — the plugin adapter loads automatically
 ```
 
-**Status:** Repo mode fully supported. Optional Cursor hook adapter (`.cursor-plugin/plugin.json` + `hooks/session-start.js`) injects startup context automatically. The adapter assumes this repo is the workspace root.
+**Status:** Repo mode fully supported. The optional Cursor hook adapter (`.cursor-plugin/plugin.json` + `hooks/session-start.js`) injects startup context automatically. The adapter assumes this repo is the workspace root.
 
 ### Codex
 
 ```shell
-# Clone the repo and point Codex at AGENTS.md
 git clone https://github.com/sallzzbr/figma-plugin-forge.git
 ```
 
@@ -70,6 +71,16 @@ The method is assistant-agnostic. Any AI that can read files works:
 3. Follow the reading hierarchy
 
 No adapter required. The docs are the product.
+
+### Updating
+
+```shell
+# Claude Code
+/plugin update figma-plugin-forge@figma-plugin-forge-marketplace
+
+# Git-based installs
+cd figma-plugin-forge && git pull
+```
 
 ### Verify Installation
 

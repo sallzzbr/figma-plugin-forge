@@ -1,12 +1,14 @@
 {
   "name": "figma-plugin-forge",
-  "description": "Optional Claude-facing metadata for the docs-first figma-plugin-forge method. Canonical guidance lives in AGENTS.md and docs/.",
-  "version": "0.2.1",
+  "description": "Complete method for designing and building Figma plugins with AI",
+  "version": "0.3.0",
   "author": {
     "name": "Antonio Salgado"
   },
   "homepage": "https://github.com/sallzzbr/figma-plugin-forge",
   "repository": "https://github.com/sallzzbr/figma-plugin-forge",
   "license": "MIT",
-  "keywords": ["figma", "plugin", "ai", "docs-first", "spec-driven", "workflow"]
+  "keywords": ["figma", "plugin", "ai", "docs-first", "spec-driven", "workflow"],
+  "skills": "./skills/",
+  "agents": "./agents/"
 }

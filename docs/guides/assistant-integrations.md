@@ -9,7 +9,7 @@ Assistant-specific assets are optional adapters that route into the same method.
 | Assistant | Official path | Assets in repo | Runtime requirements | Current limitations |
 | --- | --- | --- | --- | --- |
 | Any AI | Read `AGENTS.md` and `docs/` directly | `AGENTS.md`, `docs/`, `skills/` | None beyond the host reading repo files | No tool-specific automation |
-| Claude | AGENTS-first, optionally with Claude-facing entrypoints | `CLAUDE.md`, `.claude-plugin/plugin.json` | None for docs-first use | Metadata only; no dedicated hook adapter in this cycle |
+| Claude Code | AGENTS-first, or install via marketplace | `CLAUDE.md`, `.claude-plugin/plugin.json`, `skills/`, `agents/` | None for docs-first use; marketplace install requires Claude Code CLI | Marketplace installs skills and agents; full docs/patterns/examples available in repo mode. See [Claude Code marketplace model](#claude-code-marketplace-model) below |
 | Cursor | AGENTS-first, optionally with Cursor hook adapter | `.cursor-plugin/plugin.json`, `hooks/hooks-cursor.json`, `hooks/session-start.js` | Node 18+ only if you want the optional hook helper | Hook helper injects startup context only; method still lives in `AGENTS.md` plus `docs/`. See [Cursor distribution model](#cursor-distribution-model) below for portability limits |
 | Codex | AGENTS-first | `.codex/README.md` | None for docs-first use | No `.codex-plugin` bundle in this cycle |
 
@@ -23,6 +23,33 @@ Assistant-specific assets are optional adapters that route into the same method.
 ## Practical rule
 
 If an adapter makes the method less clear than reading `AGENTS.md` directly, prefer the docs path.
+
+## Claude Code marketplace model
+
+`figma-plugin-forge` is available as a Claude Code plugin via a custom marketplace:
+
+```shell
+# 1. Add the marketplace
+/plugin marketplace add sallzzbr/figma-plugin-forge-marketplace
+
+# 2. Install the plugin
+/plugin install figma-plugin-forge@figma-plugin-forge-marketplace
+
+# Update
+/plugin update figma-plugin-forge@figma-plugin-forge-marketplace
+```
+
+The marketplace repo ([sallzzbr/figma-plugin-forge-marketplace](https://github.com/sallzzbr/figma-plugin-forge-marketplace)) contains a `marketplace.json` that points to this repo via GitHub source. Claude Code fetches the plugin directly from `sallzzbr/figma-plugin-forge`.
+
+**What gets installed:** All skills in `skills/` and agents in `agents/`. These trigger automatically during your workflow — brainstorming, writing plans, executing plans, and Figma API guidance.
+
+**What is NOT included in the plugin install:** The full `docs/` tree (guides, patterns, snippets, examples, templates). Skills that reference `docs/` paths include bundle-mode fallbacks, but for full access to the pattern catalog and API reference, clone the repo as a sibling:
+
+```shell
+git clone https://github.com/sallzzbr/figma-plugin-forge.git ../figma-plugin-forge
+```
+
+**Distribution model:** The marketplace is a pointer, not a fork. Installing via marketplace always fetches the latest version from this repo's `main` branch.
 
 ## Cursor distribution model
 
