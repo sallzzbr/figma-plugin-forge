@@ -34,6 +34,12 @@ Use this order unless the user gives a more specific path:
 5. The matching snippet in [docs/snippets/README.md](docs/snippets/README.md) only if you need code shape
 6. The relevant template or filled example
 
+When writing implementation code, also read:
+
+7. [docs/guides/figma-api-reference.md](docs/guides/figma-api-reference.md) — curated API with gotchas and correct examples
+8. [docs/guides/common-pitfalls.md](docs/guides/common-pitfalls.md) — the 15 most common mistakes
+9. [docs/guides/project-setup.md](docs/guides/project-setup.md) — opinionated stack for new projects
+
 ## Responsibility by surface
 
 - `README.md`: human positioning and path selection
