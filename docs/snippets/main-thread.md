@@ -11,9 +11,17 @@ type SelectionItem = {
   type: string
 }
 
+type ExportedFrame = {
+  id: string
+  name: string
+  base64: string
+}
+
 // main -> ui
 type MainToUiMessage =
   | { type: 'selection-changed'; items: SelectionItem[]; pageName: string }
+  | { type: 'export-selection-response'; frames: ExportedFrame[] }
+  | { type: 'export-selection-error'; message: string }
   | { type: 'focus-node-error'; message: string }
 
 // ui -> main
@@ -24,7 +32,10 @@ type UiToMainMessage =
 function isUiToMainMessage(value: unknown): value is UiToMainMessage {
   if (typeof value !== 'object' || value === null) return false
   const msg = value as { type?: unknown }
-  return msg.type === 'focus-node' || msg.type === 'export-selection-request'
+  return (
+    msg.type === 'focus-node' ||
+    msg.type === 'export-selection-request'
+  )
 }
 
 function postToUi(message: MainToUiMessage): void {
@@ -64,7 +75,31 @@ figma.ui.onmessage = async (raw: unknown) => {
       return
     }
     case 'export-selection-request': {
-      // Implementation omitted; see spec-generation example for an end-to-end version.
+      const selection = figma.currentPage.selection
+      if (selection.length === 0) {
+        postToUi({ type: 'export-selection-error', message: 'Nothing selected' })
+        return
+      }
+      try {
+        const frames: ExportedFrame[] = []
+        for (const node of selection) {
+          const bytes = await node.exportAsync({
+            format: raw.format === 'svg' ? 'SVG' : raw.format === 'jpg' ? 'JPG' : 'PNG',
+            constraint: { type: 'WIDTH', value: 800 },
+          })
+          let binary = ''
+          for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i])
+          }
+          frames.push({ id: node.id, name: node.name, base64: btoa(binary) })
+        }
+        postToUi({ type: 'export-selection-response', frames })
+      } catch (err) {
+        postToUi({
+          type: 'export-selection-error',
+          message: err instanceof Error ? err.message : 'Export failed',
+        })
+      }
       return
     }
   }

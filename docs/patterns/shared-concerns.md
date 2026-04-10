@@ -19,3 +19,9 @@ Bad candidates:
 ## Rule
 
 Document the contract before you extract the concern. Otherwise you only move confusion into another folder.
+
+## Related
+
+- [messaging-bridge](messaging-bridge.md) — message helpers are a common extraction candidate
+- [runtime-split](runtime-split.md) — understand the boundary before extracting across it
+- [source-of-truth](../guides/source-of-truth.md) — ownership rules for shared vs local

@@ -13,6 +13,17 @@ This skill is a workflow adapter. The canonical method lives in `AGENTS.md` plus
 2. the linked design doc
 3. the relevant patterns
 4. the target repo structure
+5. `docs/guides/common-pitfalls.md` — keep open as a checklist during implementation
+
+### Bundle mode note
+
+If the task references a pattern file (e.g., `docs/patterns/local-audit.md`) that does not exist in the current workspace, you are in bundle mode. Clone `figma-plugin-forge` as a sibling directory and read from there:
+
+```
+git clone https://github.com/sallzzbr/figma-plugin-forge.git ../figma-plugin-forge
+```
+
+Then reference patterns as `../figma-plugin-forge/docs/patterns/local-audit.md`. Do not skip pattern reading — it defines the architecture the plan assumes.
 
 ## Execution checklist
 

@@ -14,9 +14,17 @@ type SelectionItem = {
   type: string
 }
 
+type ExportedFrame = {
+  id: string
+  name: string
+  base64: string
+}
+
 // main -> ui
 type MainToUiMessage =
   | { type: 'selection-changed'; items: SelectionItem[]; pageName: string }
+  | { type: 'export-selection-response'; frames: ExportedFrame[] }
+  | { type: 'export-selection-error'; message: string }
   | { type: 'focus-node-error'; message: string }
 
 // ui -> main
@@ -27,7 +35,12 @@ type UiToMainMessage =
 function isMainToUiMessage(value: unknown): value is MainToUiMessage {
   if (typeof value !== 'object' || value === null) return false
   const msg = value as { type?: unknown }
-  return msg.type === 'selection-changed' || msg.type === 'focus-node-error'
+  return (
+    msg.type === 'selection-changed' ||
+    msg.type === 'export-selection-response' ||
+    msg.type === 'export-selection-error' ||
+    msg.type === 'focus-node-error'
+  )
 }
 
 function postToMain(message: UiToMainMessage): void {
@@ -50,6 +63,11 @@ function App() {
           setItems(payload.items)
           setError(null)
           break
+        case 'export-selection-response':
+          // handle exported frames (e.g., display previews, send to backend)
+          console.log(`Received ${payload.frames.length} exported frame(s)`)
+          break
+        case 'export-selection-error':
         case 'focus-node-error':
           setError(payload.message)
           break

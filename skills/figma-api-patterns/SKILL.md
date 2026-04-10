@@ -16,6 +16,16 @@ This skill is a workflow adapter with an inline quick-reference. The canonical m
 5. `docs/snippets/main-thread.md` — main-thread starter with typed messages
 6. `docs/snippets/ui-iframe.md` — UI-side starter with type guards
 
+### Bundle mode note
+
+If files 1-2 above are not on disk, you are in bundle mode. The quick-references below cover the most critical patterns, but they are not a full replacement. For the complete API reference and the 15 pitfalls with detailed fixes, clone `figma-plugin-forge` as a sibling:
+
+```
+git clone https://github.com/sallzzbr/figma-plugin-forge.git ../figma-plugin-forge
+```
+
+Then read `../figma-plugin-forge/docs/guides/figma-api-reference.md` and `../figma-plugin-forge/docs/guides/common-pitfalls.md`.
+
 ## Before you write any Figma API code
 
 1. Read `docs/guides/common-pitfalls.md` and keep it open as a checklist.

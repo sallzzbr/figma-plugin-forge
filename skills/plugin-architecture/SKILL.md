@@ -17,6 +17,23 @@ This skill is a workflow adapter. The canonical method lives in `AGENTS.md` plus
 
 Then read the matching snippet in `docs/snippets/` only if you need code shape.
 
+### Bundle mode note
+
+If the files above are not on disk, you are in bundle mode. The decision trees and setup summary below work standalone. For the full pattern docs and project-setup walkthrough, clone `figma-plugin-forge` as a sibling:
+
+```
+git clone https://github.com/sallzzbr/figma-plugin-forge.git ../figma-plugin-forge
+```
+
+### Archetype summaries (for bundle mode)
+
+If you cannot read the full pattern files, here are one-paragraph summaries:
+
+- **local-audit** — Main thread traverses the current page, applies pure rules (accessibility, naming, spacing), and returns findings. UI renders filters, severity groups, and focus-back navigation. No backend. No network calls. Settings in client storage.
+- **llm-analysis** — Main thread exports selected frames. UI collects user context, sends exports + context to an optional backend that calls an LLM, and renders structured feedback. Backend is optional but typical.
+- **spec-generation** — Main thread extracts structured data from selected nodes (layout, tokens, constraints). UI renders a JSON preview with copy/download. Optional backend for enrichment. Schema is versioned and stable.
+- **library-sync** — Main thread reads library component and variable state. UI shows diffs between local and remote state. Optional backend for persistence. Fingerprinting and diff logic are the core concerns.
+
 ## Decision tree: do I need a backend?
 
 ```
