@@ -1,51 +1,68 @@
-# Design: <Topic>
+# <Feature Name> - Design Doc
 
-**Date:** YYYY-MM-DD
-**Status:** Proposed | Approved | Completed
+**Date**: YYYY-MM-DD
+**Status**: Draft | Approved | Replaced | Archived
+**Target repo**: <path, repo name, or "new project">
+**Related pattern(s)**: <docs/patterns/...>
+**Related plan**: <docs/plans/... or docs/examples/...>
 
-## Context
+## Problem
 
-What problem are we solving? What is the current state?
+What user problem are we solving? Why is this worth building?
 
-## Scope
+## Solution
 
-What changes will be made. List the modules affected.
-
-## Out of Scope
-
-What explicitly will NOT be done in this iteration.
+What are we building at a high level? Keep this concrete.
 
 ## Architecture
 
-High-level approach:
-- Which modules are affected?
-- What is the data flow?
-- What new contracts are introduced?
+- Which pattern(s) from `figma-plugin-forge` are we intentionally using?
+- Which decisions are specific to the target repo or product?
+- Which runtime pieces exist?
 
-## UI Design
+## UI Layout
 
-Screens/tabs, user interactions, component hierarchy.
+- What screens, tabs, or panels exist?
+- What does each one let the user do?
 
-## Main Thread (if applicable)
+## Runtime Responsibilities
 
-What does main.ts need to handle? New message types? Node traversal? Export?
+### Main thread
 
-## Backend (if applicable)
+- What stays in the Figma sandbox?
 
-Edge functions needed, request/response payloads, auth requirements.
+### UI iframe
 
-## Types and Contracts
+- What stays in the browser/UI layer?
 
-New or modified types. Include the TypeScript interfaces.
+### Backend
 
-## Affected Files
+- What is optional or required outside Figma?
 
-| File | Action | Description |
-|------|--------|-------------|
-| path/to/file | Create/Modify | What changes |
+## User Flow
+
+Describe the user journey step by step.
+
+## Data Flow
+
+Describe the flow of data from selection/input to final result.
+
+## Interfaces and Contracts
+
+- Message types between UI and main
+- Backend request and response shapes
+- Stable identifiers, storage keys, and state contracts
+
+## Error Handling
+
+- What can fail?
+- How will the user see and recover from errors?
 
 ## Verification Criteria
 
-1. [ ] Criterion 1
-2. [ ] Criterion 2
-3. [ ] Criterion 3
+- How will we know the design worked?
+- Which behaviors must be demonstrable?
+
+## Notes
+
+Anything intentionally deferred, risky, or worth revisiting later.

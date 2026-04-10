@@ -1,14 +1,14 @@
 {
   "name": "figma-plugin-forge",
-  "description": "Framework for building Figma plugins with AI-assisted spec-driven development. Includes brainstorming, planning, and Figma API guidance skills.",
-  "version": "0.1.0",
+  "description": "Optional Cursor-facing adapter metadata for the docs-first figma-plugin-forge method. Canonical guidance lives in AGENTS.md and docs/.",
+  "version": "0.2.1",
   "author": {
     "name": "Antonio Salgado"
   },
   "homepage": "https://github.com/sallzzbr/figma-plugin-forge",
   "repository": "https://github.com/sallzzbr/figma-plugin-forge",
   "license": "MIT",
-  "keywords": ["figma", "plugin", "design-system", "preact", "tailwind", "spec-driven"],
+  "keywords": ["figma", "plugin", "ai", "docs-first", "spec-driven", "workflow"],
   "skills": "./skills/",
   "agents": "./agents/",
   "hooks": "./hooks/hooks-cursor.json"

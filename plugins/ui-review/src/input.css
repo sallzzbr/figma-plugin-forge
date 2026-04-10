@@ -1,9 +1,0 @@
-@import "tailwindcss";
-@source "../../../packages/shared";
-@import "../../../packages/shared/styles/base.css";
-
-/* ui-review brand override */
-:root {
-  --color-primary: #6366F1;
-  --color-primary-hover: #4F46E5;
-}

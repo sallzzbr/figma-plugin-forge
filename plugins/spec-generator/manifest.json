@@ -1,1 +1,0 @@
-{"api":"1.0.0","editorType":["figma","figjam","dev"],"id":"PLUGIN_ID_HERE","name":"spec-generator","main":"build/main.js","ui":"build/ui.html","capabilities":["inspect"],"documentAccess":"dynamic-page","networkAccess":{"allowedDomains":["https://YOUR_PROJECT_ID.supabase.co"]},"enablePrivatePluginApi":true}

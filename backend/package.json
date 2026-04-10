@@ -1,6 +1,0 @@
-{
-  "name": "@figma-forge/backend",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Optional Supabase Edge Functions backend for figma-plugin-forge plugins"
-}

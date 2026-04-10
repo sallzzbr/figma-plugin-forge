@@ -2,104 +2,78 @@
 
 > If you are an AI or agent, start with `AGENTS.md`.
 
-Open-source framework for building Figma plugins with AI-assisted spec-driven development. This monorepo provides a shared component library, four boilerplate plugins covering common Figma plugin patterns, an optional Supabase backend template, and AI skills for Claude Code, Codex, and Cursor.
+`figma-plugin-forge` is a docs-first, assistant-agnostic base for designing Figma plugins with AI. The product is the method: guides, patterns, snippets, templates, examples, and optional assistant adapters that help humans and assistants work from the same playbook.
 
-## What is inside
+## What This Repo Is
+
+- A reference library for common Figma plugin architectures and decisions
+- A spec-driven workflow for brainstorming, design docs, implementation plans, and review
+- An AGENTS-first knowledge base that can be used by any AI, with optional adapters for specific tools
+
+## What This Repo Is Not
+
+- Not a monorepo of production-ready plugins
+- Not a shared UI/backend package to install as-is
+- Not a promise that Claude, Cursor, and Codex have identical integration surfaces
+
+## Two Modes of Use
+
+`figma-plugin-forge` is used in two distinct modes:
+
+- **Repo mode (canonical)**: clone this repo as your workspace and read `AGENTS.md` plus `docs/` directly. All patterns, snippets, templates, examples, and guides are available with zero setup. This is the recommended path.
+- **Bundle mode (convenience)**: install this repo's skills or adapter assets into another assistant context so the workflow is available while you work in a different target repo. Skills are self-contained and carry mirrored template shapes; bundle mode still benefits from a local checkout of this repo alongside your target repo.
+
+When the two modes disagree on a fact, repo mode wins. See [Distribution Modes](docs/guides/distribution-modes.md) for the support matrix, limitations, and conflict rules.
+
+## Choose Your Path
+
+### 1. Human-first
+
+Read [Start Here](docs/guides/start-here.md), then [Spec-Driven Workflow](docs/guides/spec-driven-workflow.md), then browse the pattern catalog in [docs/patterns/README.md](docs/patterns/README.md).
+
+### 2. AI-first, tool-agnostic
+
+Read [AGENTS.md](AGENTS.md), then [Source of Truth](docs/guides/source-of-truth.md), then the relevant guide, pattern, snippet, template, or example.
+
+### 3. Optional assistant adapters
+
+Read [Assistant Integrations](docs/guides/assistant-integrations.md). The official path is still AGENTS-first; tool-specific assets are optional adapters, not the source of truth.
+
+## Repo Map
 
 ```text
 figma-plugin-forge/
-|-- packages/
-|   `-- shared/                    # Reusable UI, services, types, and styles
-|-- plugins/
-|   |-- ds-audit/                  # Design System audit (local rules)
-|   |-- ui-review/                 # LLM-powered UX/UI analysis
-|   |-- ds-library-sync/           # DS library extraction and sync
-|   `-- spec-generator/            # Requirements generation from frames
-|-- backend/                       # Optional Supabase Edge Functions template
-|-- skills/                        # AI skills for Claude Code, Codex, Cursor
-|-- agents/                        # Code reviewer agent
+|-- README.md                  # Human-facing entrypoint
+|-- AGENTS.md                  # AI-facing entrypoint
+|-- CLAUDE.md                  # Claude-friendly alias to AGENTS.md
 |-- docs/
-|   |-- templates/                 # Design doc and plan templates
-|   `-- plans/                     # Design docs and execution plans
-|-- AGENTS.md                      # Global rules for AI and agents
-`-- README.md                      # This file
+|   |-- guides/                # How to use the repo and maintain the method
+|   |-- patterns/              # Architectural archetypes and decision guides
+|   |-- snippets/              # Copy-adapt snippets with context and limits
+|   |-- templates/             # Blank design doc and implementation plan templates
+|   |-- examples/              # Filled examples that prove the workflow
+|   `-- plans/                 # User-generated active plans and design docs
+|-- skills/                    # Optional workflow adapters for assistants
+|-- agents/                    # Optional reviewer personas
+|-- .claude-plugin/            # Optional Claude-facing metadata
+|-- .cursor-plugin/            # Optional Cursor-facing metadata
+|-- .codex/                    # Optional Codex usage notes
+`-- hooks/                     # Optional helper scripts for assistant adapters
 ```
 
-## Boilerplate plugins
+## Recommended Reading Order
 
-| Plugin             | What it does                                            | Backend required |
-| ------------------ | ------------------------------------------------------- | ---------------- |
-| `ds-audit`         | Audits Design System usage locally against synced state | No               |
-| `ui-review`        | Analyzes frames with LLM across UX/UI heuristic tabs   | Yes              |
-| `ds-library-sync`  | Extracts DS library components/variables and syncs      | Yes              |
-| `spec-generator`   | Generates product requirements from selected frames     | Yes              |
+- Humans: [docs/guides/start-here.md](docs/guides/start-here.md) -> [docs/guides/spec-driven-workflow.md](docs/guides/spec-driven-workflow.md) -> [docs/patterns/README.md](docs/patterns/README.md)
+- AIs: [AGENTS.md](AGENTS.md) -> [docs/guides/source-of-truth.md](docs/guides/source-of-truth.md) -> relevant guide/pattern/snippet
+- Maintainers: [docs/guides/maintaining-the-method.md](docs/guides/maintaining-the-method.md)
 
-## Quick start
+## Philosophy
 
-### Prerequisites
-
-- Node.js >= 18
-- npm (ships with Node)
-- A Figma desktop app for loading plugins in development
-
-### Install dependencies
-
-```bash
-npm install
-```
-
-### Run a plugin in development
-
-```bash
-npm run ds-audit:dev
-npm run ui-review:dev
-npm run ds-library-sync:dev
-npm run spec-generator:dev
-```
-
-### Build a plugin
-
-```bash
-npm run ds-audit:build
-npm run ui-review:build
-npm run ds-library-sync:build
-npm run spec-generator:build
-```
-
-### Build all plugins
-
-```bash
-npm run build:all
-```
-
-## Using with AI assistants
-
-### Option A: Just read the docs (any AI)
-
-Point your AI assistant at `AGENTS.md` in the repository root. It contains the full context needed to navigate and contribute to this codebase without installing anything.
-
-### Option B: Install as plugin (Claude Code / Cursor / Codex)
-
-The `skills/` directory contains AI skills that can be installed into Claude Code, Cursor, or Codex for guided workflows like brainstorming, plan writing, and plan execution.
-
-## Build pipeline
-
-Each plugin follows this build flow:
-
-1. **Tailwind CSS**: `src/input.css` is compiled to `src/output.css`
-2. **@create-figma-plugin/build**: compiles `main.ts` and `ui.tsx` into `build/main.js` and `build/ui.js`
-3. **build-html.js**: embeds the compiled CSS and JS into `build/ui.html` for the Figma iframe
-
-Generated artifacts (`output.css`, `build/`) should never be edited directly. Always edit the source.
-
-## Documentation convention
-
-Each module maintains two documentation files:
-
-- `README.md` for human onboarding, usage, and commands
-- `AGENTS.md` for AI/agent operational context and maintenance rules
-
-Root-level `AGENTS.md` holds global patterns and contracts. Module-level `AGENTS.md` files hold local context. Prefer linking to the root file over duplicating global rules.
+- Docs are the product
+- `AGENTS.md` plus `docs/` are the canonical source of truth
+- Skills and adapters should route into the docs, not compete with them
+- Snippets should teach shape and constraints, not pretend to be a framework package
+- Working plugin code should usually live in the target repo, not here
 
 ## License
 

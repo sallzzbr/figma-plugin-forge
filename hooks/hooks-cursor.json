@@ -2,7 +2,7 @@
   "version": 1,
   "hooks": {
     "sessionStart": [
-      { "command": "./hooks/session-start" }
+      { "command": "node ./hooks/session-start.js" }
     ]
   }
 }

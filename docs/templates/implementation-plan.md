@@ -1,47 +1,65 @@
-# <Feature Name> Implementation Plan
+# <Feature Name> - Implementation Plan
 
-> **For Claude:** Use executing-plans skill to implement this plan task-by-task.
+**Date**: YYYY-MM-DD
+**Design doc**: <path to design doc>
+**Target repo**: <path, repo name, or "new project">
+**Assumed repo structure**: <one-line summary of folders or files the plan assumes exist>
+**Status**: Draft | Approved | In Progress | Done
 
-**Goal:** One sentence describing what this builds.
+> For assistants: use the `executing-plans` skill to implement this plan task by task.
 
-**Architecture:** 2-3 sentences about approach.
+## Goal
 
-**Tech Stack:** Key technologies/libraries involved.
+One paragraph describing what this plan achieves and why.
 
----
+## Scope
 
-### Task N: <Component Name>
+- Included:
+- Excluded:
 
-**Files:**
-- Create: `exact/path/to/file.ts`
-- Modify: `exact/path/to/existing.ts`
+## Tasks
 
-**Step 1: <Action description>**
+### Task 1: <Short title>
 
-```typescript
-// Code to write or change
-```
+**Files to create or modify**
 
-**Step 2: Build and verify**
+- <relative path>
 
-```bash
-npm run build -w plugins/<name>
-```
-Expected: Build succeeds with no errors.
+**Outcome**
 
-**Step 3: Commit**
+Describe the exact result this task should produce.
 
-```bash
-git add <files>
-git commit -m "feat: description"
-```
+**Verification**
 
----
+Describe the command, manual check, or observable behavior that proves the task is done.
 
-### Verification
+**Commit message**
 
-After all tasks:
-1. All builds pass: `npm run build:all`
-2. No TypeScript errors
-3. Plugin loads correctly in Figma
-4. [Feature-specific checks]
+`feat(<area>): <what this task accomplished>`
+
+### Task 2: <Short title>
+
+**Files to create or modify**
+
+- <relative path>
+
+**Outcome**
+
+Describe the exact result this task should produce.
+
+**Verification**
+
+Describe the command, manual check, or observable behavior that proves the task is done.
+
+**Commit message**
+
+`feat(<area>): <what this task accomplished>`
+
+## Post-completion checklist
+
+- [ ] All tasks were implemented
+- [ ] Verification was run and read
+- [ ] Design doc and plan still match reality
+- [ ] Runtime boundaries stayed clear
+- [ ] Contract changes were documented
+- [ ] The assumed repo structure was still accurate

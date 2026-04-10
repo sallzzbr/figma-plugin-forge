@@ -1,47 +1,40 @@
 ---
 name: using-figma-plugin-forge
-description: Use when starting any conversation in a figma-plugin-forge project -- establishes available skills and conventions for Figma plugin development
+description: Use when starting any conversation in a figma-plugin-forge context to route into the docs-first workflow
 ---
 
 # Using Figma Plugin Forge
 
-This is the meta-skill for figma-plugin-forge. It tells you what skills are available, when to invoke them, and how to follow the project's spec-driven development flow.
+This skill is a thin adapter. The canonical method lives in `AGENTS.md` plus `docs/`.
 
-## How Skills Work
+## Read first
 
-Skills are markdown files that provide domain-specific guidance for AI assistants working in this repository. Each skill covers a different aspect of Figma plugin development. You should invoke the relevant skill BEFORE taking any action or writing any response.
+1. `AGENTS.md`
+2. `docs/guides/source-of-truth.md`
+3. `docs/guides/distribution-modes.md`
+4. `docs/guides/spec-driven-workflow.md`
 
-## Available Skills
+## Then choose the smallest next skill
 
-| Skill | When to use |
-|-------|------------|
-| brainstorming | User wants to create a new plugin or major feature. ALWAYS before implementation. |
-| writing-plans | Design doc approved, need task-by-task implementation plan. |
-| executing-plans | Plan exists, time to implement task by task with commits. |
-| figma-api-patterns | Working with Figma Plugin API: selection, traversal, export, variables, styles. |
-| plugin-architecture | Build pipeline, shared package, CSS/Tailwind, manifest, project structure. |
+- `brainstorming`
+- `writing-plans`
+- `executing-plans`
+- `figma-api-patterns`
+- `plugin-architecture`
 
-## The Rule
+## Mode awareness
 
-Invoke relevant skills BEFORE any response or action. Even 1% chance a skill applies = invoke it.
+This skill works in both modes (see `docs/guides/distribution-modes.md`):
 
-## Priority
+- **Repo mode**: the workspace is a checkout of `figma-plugin-forge`. `docs/` is on disk. The skills route into the canonical patterns, templates, and examples directly.
+- **Bundle mode**: the workspace is a different target repo and `docs/` is not present. The workflow skills (`brainstorming`, `writing-plans`) still work because they carry a mirrored template shape inline. You lose direct access to the pattern catalog, full examples, and guides.
 
-1. Process skills first (brainstorming, writing-plans, executing-plans)
-2. Reference skills second (figma-api-patterns, plugin-architecture)
+If you are in bundle mode and need the full pattern catalog or an end-to-end example, recommend that the user clone `figma-plugin-forge` as a sibling directory or open it in a second workspace. Do not try to reconstruct a pattern or example from memory.
 
-## For any Figma plugin work
+## Rule
 
-1. Read AGENTS.md at repo root first
-2. Read the specific module's AGENTS.md
-3. Follow spec-driven flow: design doc -> plan -> implement -> verify
+If this skill ever disagrees with `AGENTS.md` or `docs/`, follow `AGENTS.md` plus `docs/`.
 
-## Red Flags (stop and check for skills)
+## Maintenance note
 
-- "Let me just code this" -> brainstorming first
-- "I'll figure out the Figma API" -> figma-api-patterns first
-- "How does the build work" -> plugin-architecture first
-
-## Without Skills Installed
-
-If you're an AI without this plugin installed, read AGENTS.md at the repo root. It contains all conventions needed for autonomous operation.
+If you change templates, patterns, or integration docs, review `docs/guides/maintaining-the-method.md` and run `node scripts/validate-docs.mjs` to catch mirror drift.

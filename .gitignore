@@ -1,9 +1,10 @@
 node_modules/
 build/
 dist/
+.cache/
 *.log
 .DS_Store
 Thumbs.db
-src/output.css
 .env
 .env.local
+.claude/

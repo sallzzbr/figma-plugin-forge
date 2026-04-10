@@ -1,10 +1,19 @@
-# Codex Integration
+# Codex Integration Notes
 
-To use figma-plugin-forge skills with OpenAI Codex CLI:
+The official Codex path for `figma-plugin-forge` is AGENTS-first.
 
-1. Add `AGENTS.md` to your Codex context
-2. Reference skills from `skills/` directory as needed
-3. The `AGENTS.md` file contains all conventions needed for autonomous operation
+## Read first
 
-## Manual skill loading
-Copy relevant skill content from `skills/<skill-name>/SKILL.md` into your Codex instructions.
+1. `AGENTS.md`
+2. `docs/guides/source-of-truth.md`
+3. `docs/guides/assistant-integrations.md`
+
+## Then use
+
+- the relevant guide in `docs/guides/`
+- the relevant pattern in `docs/patterns/`
+- the relevant skill in `skills/`, if helpful
+
+## Limitation
+
+This repository does not ship a `.codex-plugin` bundle in this cycle.

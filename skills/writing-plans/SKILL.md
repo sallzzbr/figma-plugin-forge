@@ -1,183 +1,124 @@
 ---
 name: writing-plans
-description: Use after a design doc is approved to create a detailed, task-by-task implementation plan for a Figma plugin
+description: Use after a design doc is approved to create a task-by-task implementation plan
 ---
 
 # Writing Implementation Plans
 
-You are writing a step-by-step implementation plan for a Figma plugin feature. The plan must be detailed enough that any engineer (or AI agent) with zero prior context can execute it without guessing.
+This skill is a workflow adapter. The canonical method lives in `AGENTS.md` plus `docs/` (see [docs/guides/distribution-modes.md](../../docs/guides/distribution-modes.md) for repo mode vs bundle mode).
 
-## When to use this skill
+## Read first
 
-- A design doc or spec has been approved and it is time to break it into executable tasks
-- A feature request is well-understood and needs a concrete action plan before coding begins
-- You want to hand off implementation to another session or agent
+1. the approved design doc
+2. the relevant pattern docs
+3. [docs/templates/implementation-plan.md](../../docs/templates/implementation-plan.md)
+4. [docs/guides/distribution-modes.md](../../docs/guides/distribution-modes.md)
 
-## Plan file location
+## Checklist
 
-Save the plan to: `docs/plans/YYYY-MM-DD-<feature-slug>.md`
+- include exact file paths for every task
+- include typed contracts for any new boundary (message shapes, backend requests, storage keys)
+- include verification for every task
+- include commit message for every task
+- include the assumed target repo structure
+- split cross-runtime contract changes into explicit steps
 
-Use today's date. Use a short kebab-case slug that describes the feature (e.g., `2026-04-08-layer-rename-tool.md`).
+## Decision-complete definition
 
-## Plan header template
+A plan is decision-complete when all of the following are true:
 
-Every plan starts with this header:
+- Every task names the exact files to create or modify, by relative path.
+- Every task has a concrete outcome, not a vague description.
+- Every task has a verification step: a command, a manual check, or an observable behavior that proves the task is done.
+- Every task has a commit message following the target repo's convention.
+- Any new message type, storage key, or backend endpoint is declared once as a typed contract and referenced by subsequent tasks.
+- The target repo structure is stated up front so the reader does not have to guess which folders exist.
+- Cross-runtime changes (main thread, UI iframe, backend) are split into separate tasks so each runtime can be reviewed independently.
+
+If any of these are missing, the plan is not ready to execute. Return to the design doc or ask the user the missing question.
+
+## Output
+
+Save the plan to:
+
+- `docs/plans/YYYY-MM-DD-<feature-slug>.md` in the current workspace if a `docs/plans/` directory exists (repo mode or any target repo that already uses this layout); or
+- the same `figma-plugin-forge-plans/` directory used by the matching design doc; or
+- a path the user explicitly chooses.
+
+Never write the file to an implicit or guessed path.
+
+## Embedded implementation-plan template (mirror)
+
+> Mirror provenance: [docs/templates/implementation-plan.md](../../docs/templates/implementation-plan.md). Canonical file wins on conflict. Drift-checked by `scripts/validate-docs.mjs`.
 
 ```markdown
-# <Feature Name> — Implementation Plan
+# <Feature Name> - Implementation Plan
 
 **Date**: YYYY-MM-DD
-**Design doc**: <link or path to the design doc, if any>
-**Plugin**: plugins/<plugin-name>
+**Design doc**: <path to design doc>
+**Target repo**: <path, repo name, or "new project">
+**Assumed repo structure**: <one-line summary of folders or files the plan assumes exist>
 **Status**: Draft | Approved | In Progress | Done
 
-> **For Claude**: use the `executing-plans` skill to implement this plan task by task.
+> For assistants: use the `executing-plans` skill to implement this plan task by task.
 
 ## Goal
 
-<One paragraph: what this plan achieves and why.>
+One paragraph describing what this plan achieves and why.
 
 ## Scope
 
-- What is included
-- What is explicitly excluded
-```
+- Included:
+- Excluded:
 
-## Task structure
+## Tasks
 
-Break the work into numbered tasks. Each task should take 2-5 minutes to implement. If a task feels larger, split it further.
+### Task 1: <Short title>
 
-### Task template
+**Files to create or modify**
 
-```markdown
-### Task N: <Short title>
+- <relative path>
 
-**Files to create or modify**:
-- `plugins/<name>/src/types.ts` — add `FooPayload` type
-- `plugins/<name>/src/main.ts` — register new message handler
-- `plugins/<name>/src/components/FooPanel.tsx` — new component
+**Outcome**
 
-**Shared types** (if any):
-- `packages/shared/types/<file>.ts` — add shared contract
+Describe the exact result this task should produce.
 
-**Backend function** (if applicable):
-- `backend/supabase/functions/<function-name>/index.ts`
+**Verification**
 
-**What to do**:
-1. Exact step-by-step instructions
-2. Include code snippets for non-obvious logic
-3. Reference existing patterns in the codebase when possible
+Describe the command, manual check, or observable behavior that proves the task is done.
 
-**How to verify**:
-- `npm run build -w plugins/<name>` completes without errors
-- <Describe expected behavior or output>
+**Commit message**
 
-**Commit**: `feat(<plugin>): <what this task accomplished>`
-```
+`feat(<area>): <what this task accomplished>`
 
-## Writing guidelines
+### Task 2: <Short title>
 
-### Be explicit about files
+**Files to create or modify**
 
-Every task must list the exact file paths to create or modify. Use paths relative to the repo root. Never say "update the relevant file" — name it.
+- <relative path>
 
-### Specify which runtime boundary
+**Outcome**
 
-Figma plugins have two separate runtimes. Each task must be clear about which side it affects:
+Describe the exact result this task should produce.
 
-- **Main thread** (`src/main.ts`): Figma API access, node traversal, storage, message handling. No DOM, no network.
-- **UI iframe** (`src/ui.tsx`, `src/App.tsx`, `src/components/`): Preact rendering, network calls, browser APIs. No direct Figma API access.
-- **Backend** (`backend/supabase/functions/`): validation, auth, persistence, LLM calls.
+**Verification**
 
-If a task touches the message boundary between main and UI, spell out the message type, its payload shape, and which side sends vs. receives.
+Describe the command, manual check, or observable behavior that proves the task is done.
 
-### Respect the shared package
+**Commit message**
 
-Before creating any local utility, component, or type, check `packages/shared/`. The plan should reference shared imports when they exist:
+`feat(<area>): <what this task accomplished>`
 
-- `@figma-forge/shared/ui` — Button, Card, Badge, Input, LoadingSpinner, ErrorMessage, Tabs
-- `@figma-forge/shared/services` — bridge, auth, config helpers
-- `@figma-forge/shared/types` — cross-plugin contracts
-- `@figma-forge/shared/styles` — base Tailwind config and CSS
-
-### Include build verification
-
-Every task that changes code must end with:
-
-```
-npm run build -w plugins/<name>
-```
-
-If the task changes shared code, also verify all consuming plugins:
-
-```
-npm run build:all
-```
-
-### Keep commits granular
-
-Each task should produce exactly one commit. Use conventional commit format:
-
-- `feat(<plugin>): add layer rename panel component`
-- `fix(<plugin>): handle empty selection in export flow`
-- `refactor(shared): extract message types to shared/types`
-- `docs(<plugin>): update AGENTS.md with new message contracts`
-
-### Build constraints to mention when relevant
-
-Remind the implementer of these constraints when a task could trigger them:
-
-- No JSX fragments (`<>...</>`) — use a wrapper `<div>` instead
-- No `innerHTML` with closing HTML tags — use `textContent` instead
-- UI entry must be `export default function(rootNode: HTMLElement)`
-- `figma.fileKey` requires `"enablePrivatePluginApi": true` in manifest
-
-## Plan footer template
-
-End every plan with:
-
-```markdown
 ## Post-completion checklist
 
-- [ ] All tasks committed with descriptive messages
-- [ ] `npm run build -w plugins/<name>` passes
-- [ ] Plugin can be loaded in Figma (close and reopen after rebuild)
-- [ ] Affected `AGENTS.md` files updated if contracts or structure changed
-- [ ] No local duplicates of shared components or types
+- [ ] All tasks were implemented
+- [ ] Verification was run and read
+- [ ] Design doc and plan still match reality
+- [ ] Runtime boundaries stayed clear
+- [ ] Contract changes were documented
+- [ ] The assumed repo structure was still accurate
 ```
 
-## After writing the plan
+## Maintenance note
 
-1. Present the plan to the user for review
-2. Ask if any tasks need adjustment, reordering, or splitting
-3. Once approved, offer two execution paths:
-   - **This session**: use the `executing-plans` skill (or `subagent-driven-development` for parallel tasks)
-   - **Separate session**: the user can open a new conversation and invoke `executing-plans` with the plan path
-
-## Example task (for reference)
-
-```markdown
-### Task 3: Add selection-changed message handler in main.ts
-
-**Files to modify**:
-- `plugins/ds-audit/src/main.ts` — add handler for `selection-changed`
-- `plugins/ds-audit/src/types.ts` — add `SelectionPayload` type
-
-**What to do**:
-1. In `types.ts`, add:
-   ```ts
-   export interface SelectionPayload {
-     nodeIds: string[];
-     nodeNames: string[];
-   }
-   ```
-2. In `main.ts`, inside the existing `figma.on('selectionchange', ...)` callback:
-   - Build a `SelectionPayload` from `figma.currentPage.selection`
-   - Send it to the UI via `figma.ui.postMessage({ type: 'selection-changed', payload })`
-
-**How to verify**:
-- `npm run build -w plugins/ds-audit` completes without errors
-- After loading in Figma, selecting nodes should trigger the message (verify via console)
-
-**Commit**: `feat(ds-audit): send selection-changed message to UI`
-```
+If you change the canonical template in [docs/templates/implementation-plan.md](../../docs/templates/implementation-plan.md), also update the mirror above and run `node scripts/validate-docs.mjs` to confirm the drift check passes. Review [docs/examples/](../../docs/examples/) and [docs/guides/maintaining-the-method.md](../../docs/guides/maintaining-the-method.md) for knock-on changes.
