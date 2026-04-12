@@ -24,10 +24,10 @@ Installation differs by platform. Claude Code supports marketplace install; othe
 
 ```shell
 # 1. Add the marketplace
-/plugin marketplace add sallzzbr/figma-plugin-forge-marketplace
+/plugin marketplace add sallzzbr/figma-plugin-forge
 
 # 2. Install the plugin
-/plugin install figma-plugin-forge@figma-plugin-forge-marketplace
+/plugin install figma-plugin-forge@figma-plugin-forge
 ```
 
 This installs the skills, agents, and docs as a Claude Code plugin. Skills trigger automatically during your workflow.
@@ -76,7 +76,7 @@ No adapter required. The docs are the product.
 
 ```shell
 # Claude Code
-/plugin update figma-plugin-forge@figma-plugin-forge-marketplace
+/plugin update figma-plugin-forge@figma-plugin-forge
 
 # Git-based installs
 cd figma-plugin-forge && git pull

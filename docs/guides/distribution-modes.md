@@ -27,7 +27,7 @@ Install this repo's skills or adapter assets into another assistant context, so 
 | Assistant | Repo mode | Bundle mode | Install method |
 | --- | --- | --- | --- |
 | Any AI | Yes | N/A | `git clone` + read `AGENTS.md` |
-| Claude Code | Yes | Yes (marketplace) | `/plugin marketplace add sallzzbr/figma-plugin-forge-marketplace` then `/plugin install figma-plugin-forge@figma-plugin-forge-marketplace` |
+| Claude Code | Yes | Yes (marketplace) | `/plugin marketplace add sallzzbr/figma-plugin-forge` then `/plugin install figma-plugin-forge@figma-plugin-forge` |
 | Cursor | Yes | Adapter only (workspace-root) | `git clone` and open as Cursor workspace |
 | Codex | Yes | Not shipped this cycle | `git clone` + read `AGENTS.md` |
 
