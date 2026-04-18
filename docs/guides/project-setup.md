@@ -52,26 +52,7 @@ my-figma-plugin/
 
 ## manifest.json
 
-```json
-{
-  "name": "My Plugin",
-  "id": "YOUR_PLUGIN_ID",
-  "api": "1.0.0",
-  "editorType": ["figma"],
-  "main": "build/main.js",
-  "ui": "build/ui.html",
-  "documentAccess": "dynamic-page",
-  "networkAccess": {
-    "allowedDomains": []
-  }
-}
-```
-
-Notes:
-- Get your plugin ID from [Figma Plugin Dashboard](https://www.figma.com/developers)
-- Set `documentAccess` to `"dynamic"` only if you need to access pages other than the current one
-- Add backend domains to `allowedDomains` only if the UI makes network calls
-- Remove `networkAccess` entirely if the plugin is local-only
+See [`docs/snippets/manifest.md`](../snippets/manifest.md) for the canonical manifest, the opt-in fragments, and the archetype → fields decision table. Place the resulting `manifest.json` at the repo root (see the file structure above). Do not duplicate the manifest template here.
 
 ## package.json
 

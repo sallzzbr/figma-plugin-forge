@@ -22,6 +22,8 @@ Before editing an adapter or skill, check whether the real change belongs in `AG
   confirm it still matches the template and declared target repo assumptions
 - Changed an adapter:
   update the integration matrix and runtime requirements
+- Changed `docs/snippets/manifest.md` or the design-doc `## Manifest Decisions` section:
+  run `node scripts/validate-docs.mjs` and confirm every example implementation plan still shows a valid manifest JSON in Task 1, matching its archetype
 
 ## Editorial verification
 
@@ -41,13 +43,14 @@ Run the editorial validation script before committing:
 node scripts/validate-docs.mjs
 ```
 
-It catches five classes of drift automatically:
+It catches six classes of drift automatically:
 
 1. Broken relative links in tracked markdown files
 2. Machine-local absolute paths leaking into versioned docs
 3. Archetype coverage gaps in `docs/examples/`
 4. Mirror drift between skills and `docs/templates/`
 5. Integration matrix entries that reference files that do not exist
+6. Manifest drift: missing canonical snippet, duplicate manifest in `project-setup.md`, or an example plan whose Task 1 lacks a valid manifest JSON
 
 Exit code `0` means clean. Any failure prints the file path, line, and reason. See [scripts/README.md](../../scripts/README.md) for the full list of checks and how to fix typical failures.
 

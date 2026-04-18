@@ -110,6 +110,14 @@ type MainToUiMessage =
 - Stable identifiers: `Finding.id` is derived from `nodeId` plus the background source so the UI can key react lists without collisions.
 - Storage key: `contrast-auditor.settings-v1` in `figma.clientStorage`. The `-v1` suffix allows future schema changes without losing backward compatibility.
 
+## Manifest Decisions
+
+- `editorType`: `["figma"]`. Design-file plugin only.
+- `documentAccess`: `dynamic-page`. The audit runs against `figma.currentPage` only; cross-page traversal is explicitly out of scope.
+- `networkAccess.allowedDomains`: empty — no `networkAccess` block at all. The plugin is local-only and never calls out.
+- `enablePrivatePluginApi`: `false`. `figma.fileKey` is not used.
+- Plugin ID source: placeholder during development; replace with a new ID from the Figma Plugin Dashboard before publishing.
+
 ## Error Handling
 
 - Empty page or no text nodes: main returns `audit-result` with an empty `groups` array and `totalFailing: 0`; the UI shows a friendly "nothing to audit" state.

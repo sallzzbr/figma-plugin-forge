@@ -14,6 +14,10 @@
  *      the canonical file.
  *   5. Integration matrix consistency: every asset named in the
  *      assistant-integrations.md matrix exists on disk.
+ *   6. Manifest consistency: the canonical manifest snippet is present,
+ *      project-setup.md does not reintroduce a duplicate manifest JSON,
+ *      and every example implementation plan shows a valid manifest
+ *      JSON under Task 1.
  *
  * Usage:
  *   node scripts/validate-docs.mjs
@@ -384,6 +388,118 @@ function checkIntegrationMatrix() {
   return failures
 }
 
+// ---------- check 6: manifest consistency ----------
+
+function extractJsonBlocks(markdown) {
+  const blocks = []
+  const re = /```json\r?\n([\s\S]*?)```/g
+  for (const match of markdown.matchAll(re)) {
+    blocks.push(match[1])
+  }
+  return blocks
+}
+
+function looksLikeManifest(jsonText) {
+  // Heuristic: a manifest block declares both "main" and "ui" plus "editorType".
+  return (
+    /"main"\s*:/.test(jsonText) &&
+    /"ui"\s*:/.test(jsonText) &&
+    /"editorType"\s*:/.test(jsonText)
+  )
+}
+
+function checkManifestConsistency() {
+  const failures = []
+
+  // 6a. Canonical snippet must exist with a manifest block and the archetype table.
+  const snippetPath = join(REPO_ROOT, 'docs', 'snippets', 'manifest.md')
+  if (!existsSync(snippetPath)) {
+    failures.push({ reason: 'docs/snippets/manifest.md not found' })
+    return failures
+  }
+  const snippetContent = readFile(snippetPath)
+  const snippetBlocks = extractJsonBlocks(snippetContent).filter(looksLikeManifest)
+  if (snippetBlocks.length === 0) {
+    failures.push({
+      file: 'docs/snippets/manifest.md',
+      reason: 'canonical manifest JSON block not found (needs "main", "ui", "editorType")',
+    })
+  }
+  if (!/Archetype\s*→\s*manifest|Archetype → manifest/i.test(snippetContent)) {
+    failures.push({
+      file: 'docs/snippets/manifest.md',
+      reason: 'archetype → manifest decision table not found (expected heading containing "Archetype")',
+    })
+  }
+
+  // 6b. project-setup.md must not reintroduce a second manifest JSON block.
+  const projectSetupPath = join(REPO_ROOT, 'docs', 'guides', 'project-setup.md')
+  if (existsSync(projectSetupPath)) {
+    const setupBlocks = extractJsonBlocks(readFile(projectSetupPath)).filter(looksLikeManifest)
+    if (setupBlocks.length > 0) {
+      failures.push({
+        file: 'docs/guides/project-setup.md',
+        reason: `duplicate manifest JSON block reintroduced (${setupBlocks.length} block(s)); keep the canonical copy only in docs/snippets/manifest.md`,
+      })
+    }
+  }
+
+  // 6c. Every implementation-plan example must show a valid manifest JSON in Task 1.
+  const examplesDir = join(REPO_ROOT, 'docs', 'examples')
+  if (existsSync(examplesDir)) {
+    const planFiles = readdirSync(examplesDir)
+      .filter((f) => f.endsWith('.md') && /implementation-plan/.test(f) && f !== 'README.md')
+      .map((f) => join(examplesDir, f))
+
+    const requiredKeys = ['name', 'id', 'api', 'main', 'ui', 'editorType']
+    for (const file of planFiles) {
+      const content = readFile(file)
+      // Slice from "### Task 1" to the next "### Task" heading.
+      const task1Start = content.search(/^###\s+Task\s+1\b/m)
+      if (task1Start === -1) {
+        failures.push({
+          file: relative(REPO_ROOT, file),
+          reason: 'no "### Task 1" heading found',
+        })
+        continue
+      }
+      const afterTask1 = content.slice(task1Start)
+      const nextTaskMatch = afterTask1.slice(1).search(/^###\s+Task\s+\d+\b/m)
+      const task1Section = nextTaskMatch === -1 ? afterTask1 : afterTask1.slice(0, nextTaskMatch + 1)
+
+      const blocks = extractJsonBlocks(task1Section).filter(looksLikeManifest)
+      if (blocks.length === 0) {
+        failures.push({
+          file: relative(REPO_ROOT, file),
+          reason: 'Task 1 does not contain a manifest JSON block (needs "main", "ui", "editorType")',
+        })
+        continue
+      }
+
+      // Parse the first manifest block and check required keys.
+      let parsed
+      try {
+        parsed = JSON.parse(blocks[0])
+      } catch (err) {
+        failures.push({
+          file: relative(REPO_ROOT, file),
+          reason: `Task 1 manifest JSON does not parse: ${err.message}`,
+        })
+        continue
+      }
+      const missing = requiredKeys.filter((k) => !(k in parsed))
+      if (missing.length > 0) {
+        failures.push({
+          file: relative(REPO_ROOT, file),
+          reason: `Task 1 manifest missing required keys: ${missing.join(', ')}`,
+        })
+      }
+    }
+  }
+
+  return failures
+}
+
 // ---------- runner ----------
 
 function printFailures(name, failures, formatter) {
@@ -437,6 +553,12 @@ function main() {
     'check 5: integration matrix consistency',
     checkIntegrationMatrix(),
     (f) => (f.asset ? `${f.file}:${f.line}  ${f.asset}  (${f.reason})` : f.reason)
+  )
+
+  anyFailure |= printFailures(
+    'check 6: manifest consistency',
+    checkManifestConsistency(),
+    (f) => (f.file ? `${f.file}: ${f.reason}` : f.reason)
   )
 
   console.log('')

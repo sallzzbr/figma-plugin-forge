@@ -47,6 +47,8 @@ The plan should be decision-complete and task-oriented:
 
 This repository is not the target app. Use the patterns and snippets as references, then build in the user's real workspace.
 
+Every task must still use the canonical happy path (manifest shape, `figma.showUI` + typed `postMessage`, runtime split, esbuild output) defined in [`AGENTS.md § Happy path`](../../AGENTS.md#happy-path). Deviations belong in the design doc's `## Architecture` section with a stated reason.
+
 ## Step 5: Review and feed back
 
 If the implementation teaches you something new about the method, update this repository's docs, patterns, snippets, skills, or examples.

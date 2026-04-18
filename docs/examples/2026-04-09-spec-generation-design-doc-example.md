@@ -129,6 +129,14 @@ type EnrichError = {
 - Stable contract version: `'figma-plugin-forge/component-spec@1'`. Any breaking change bumps this to `@2` and requires updating the backend validator in the same commit as the schema change.
 - Storage keys: none for this plugin; the spec is transient per session.
 
+## Manifest Decisions
+
+- `editorType`: `["figma"]`. Design-file plugin.
+- `documentAccess`: `dynamic-page`. Extraction runs on the current selection; multi-page traversal is not required.
+- `networkAccess.allowedDomains`: `["https://api.example.com"]` (replace with the enrichment backend host). Needed because the optional enrichment flow POSTs to the backend. Even though the backend is optional, declaring the domain is required for the request to succeed when the user opts in.
+- `enablePrivatePluginApi`: `false`. `figma.fileKey` is not used.
+- Plugin ID source: placeholder during development; replace with a new ID from the Figma Plugin Dashboard before publishing.
+
 ## Error Handling
 
 - Empty selection: extract button is disabled and the summary shows "select a frame or component to start".

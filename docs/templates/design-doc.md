@@ -53,6 +53,16 @@ Describe the flow of data from selection/input to final result.
 - Backend request and response shapes
 - Stable identifiers, storage keys, and state contracts
 
+## Manifest Decisions
+
+Fill in every field. These answers drive `manifest.json` per [`docs/snippets/manifest.md`](../snippets/manifest.md).
+
+- `editorType`: figma / figjam / slides / dev (one or more, with reason)
+- `documentAccess`: `dynamic-page` (current page only) vs `dynamic` (cross-page, triggers permission prompt) — which and why
+- `networkAccess.allowedDomains`: exact domains the UI will call, or empty if none
+- `enablePrivatePluginApi`: true or false + reason (only true if `figma.fileKey` or other private APIs are required)
+- Plugin ID source: new from [Figma Plugin Dashboard](https://www.figma.com/developers), reusing an existing ID, or placeholder for development
+
 ## Error Handling
 
 - What can fail?

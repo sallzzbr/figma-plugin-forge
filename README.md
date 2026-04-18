@@ -18,59 +18,56 @@ There's a bunch more to it — snippets, templates, examples, a validation scrip
 
 > **If you are an AI or agent**, start with [`AGENTS.md`](AGENTS.md).
 
-Installation differs by platform. Claude Code supports marketplace install; other platforms use git clone. See [distribution modes](docs/guides/distribution-modes.md) for the full explanation.
+### Who this is for
 
-### Claude Code (Marketplace)
+**You do not need to know how to code.** You'll talk to an AI, and this repo tells the AI what to ask, how to design the plugin, and how to build it correctly. The AI does the typing; you make the decisions about what the plugin should do.
+
+### Prerequisites
+
+Before you start, install these four things on your computer:
+
+- [ ] **[Figma Desktop](https://www.figma.com/downloads/)** — needed to load and test your plugin.
+- [ ] **[Node.js 18 or newer](https://nodejs.org/)** — the AI uses this to build the plugin.
+- [ ] **[Git](https://git-scm.com/downloads)** — to download this repo.
+- [ ] **An AI tool that can read local files** — recommended: [Claude Code](https://claude.com/claude-code). Cursor, Codex, or any other file-reading AI also works.
+
+### Get started in three steps
 
 ```shell
-# 1. Add the marketplace
-/plugin marketplace add sallzzbr/figma-plugin-forge
-
-# 2. Install the plugin
-/plugin install figma-plugin-forge@figma-plugin-forge
-```
-
-This installs the skills, agents, and docs as a Claude Code plugin. Skills trigger automatically during your workflow.
-
-**Want full access to all patterns, examples, and guides?** Clone the repo as a workspace alongside your target repo:
-
-```shell
+# 1. Download this repo
 git clone https://github.com/sallzzbr/figma-plugin-forge.git
 ```
 
-### Cursor
-
 ```shell
-# Clone the repo and open it as a Cursor workspace
-git clone https://github.com/sallzzbr/figma-plugin-forge.git
-# Open the folder in Cursor — the plugin adapter loads automatically
+# 2. Open the folder in your AI tool of choice
 ```
 
-**Status:** Repo mode fully supported. The optional Cursor hook adapter (`.cursor-plugin/plugin.json` + `hooks/session-start.js`) injects startup context automatically. The adapter assumes this repo is the workspace root.
+**3. Tell the AI, in your own words:**
 
-### Codex
+> *"Read `AGENTS.md` and `docs/guides/start-here.md`, then help me build a Figma plugin that [describe your idea]."*
 
-```shell
-git clone https://github.com/sallzzbr/figma-plugin-forge.git
-```
+The AI will take it from there. For a step-by-step walkthrough of your first plugin, read [`docs/guides/start-here.md`](docs/guides/start-here.md).
 
-Or tell Codex directly:
+### What a good AI session looks like
 
-```
-Read AGENTS.md and docs/guides/source-of-truth.md from this repository, then follow the reading hierarchy.
-```
+After you describe your idea, a correctly-configured AI should:
 
-**Status:** Repo mode only. No `.codex-plugin` bundle in this cycle. See [`.codex/README.md`](.codex/README.md).
+- Ask clarifying questions instead of jumping straight to code
+- Reference a pattern from `docs/patterns/`
+- Write a design doc before writing implementation code
+- Save the design doc under `docs/plans/` in your workspace
 
-### Any Other AI
+If it skips ahead to code, it hasn't picked up the method — check that `AGENTS.md` is visible to the agent and try again.
 
-The method is assistant-agnostic. Any AI that can read files works:
+### Assistant-specific shortcuts
 
-1. Clone the repo
-2. Point the AI at `AGENTS.md`
-3. Follow the reading hierarchy
+The steps above are the recommended default. Some assistants support optional integrations that skip the "tell the AI to read AGENTS.md" step:
 
-No adapter required. The docs are the product.
+- **Claude Code** — install as a plugin: `/plugin marketplace add sallzzbr/figma-plugin-forge` then `/plugin install figma-plugin-forge@figma-plugin-forge`. Skills trigger automatically.
+- **Cursor** — opening the repo as a workspace loads the session-start adapter automatically.
+- **Codex** — repo mode only; the default 3-step flow applies.
+
+See [`docs/guides/assistant-integrations.md`](docs/guides/assistant-integrations.md) for the full adapter matrix and [`docs/guides/distribution-modes.md`](docs/guides/distribution-modes.md) for repo mode vs bundle mode.
 
 ### Updating
 
@@ -81,15 +78,6 @@ No adapter required. The docs are the product.
 # Git-based installs
 cd figma-plugin-forge && git pull
 ```
-
-### Verify Installation
-
-Start a new session and describe a Figma plugin idea. The agent should:
-- Ask clarifying questions instead of jumping to code
-- Reference a pattern from `docs/patterns/`
-- Propose a design doc before writing implementation code
-
-If it goes straight to coding, it hasn't picked up the method. Check that `AGENTS.md` is visible to the agent.
 
 ## The Basic Workflow
 

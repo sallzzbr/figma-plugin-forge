@@ -82,6 +82,20 @@ Communication:
 - Keep request and response shapes stable once documented
 - Document every contract that crosses runtime or backend boundaries
 
+## Happy path
+
+The canonical shape for every Figma plugin built through this method:
+
+1. `manifest.json` at the target repo root, following [docs/snippets/manifest.md](docs/snippets/manifest.md) (minimal block plus opt-ins justified in the design doc's `## Manifest Decisions`).
+2. `figma.showUI(__html__, { width, height })` as the main-thread UI entry.
+3. Cross-boundary communication is `postMessage`-only, with typed `UiToMainMessage` and `MainToUiMessage` defined once in `src/types/messages.ts` and imported by both runtimes.
+4. `src/main.ts` — Figma sandbox entry. Owns `figma.*`, selection, traversal, export, and client storage.
+5. `src/ui.tsx` — UI iframe entry (Preact by default, per [docs/guides/project-setup.md](docs/guides/project-setup.md)).
+6. esbuild produces `build/main.js` and `build/ui.html` (single self-contained HTML, CSS and JS inlined).
+7. No DOM access in main; no `figma.*` access in UI.
+
+Deviations require an explicit note in the design doc's `## Architecture` section stating what is different and why. Skills and examples all assume the happy path; anything else is a supported escape hatch, not a default.
+
 ## Working rules
 
 - Prefer AGENTS-first over tool-specific setup

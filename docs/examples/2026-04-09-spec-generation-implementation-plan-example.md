@@ -30,7 +30,24 @@ Implement a component spec extractor that turns selected frames and components i
 
 **Outcome**
 
-Main/UI split is in place, the UI renders a placeholder, and the plugin opens without runtime boundary violations.
+Main/UI split is in place, the UI renders a placeholder, and the plugin opens without runtime boundary violations. `manifest.json` matches the `spec-generation` archetype per [`docs/snippets/manifest.md`](../snippets/manifest.md), including `networkAccess` for the optional enrichment backend:
+
+```json
+{
+  "name": "Component Spec Extractor",
+  "id": "YOUR_PLUGIN_ID",
+  "api": "1.0.0",
+  "editorType": ["figma"],
+  "main": "build/main.js",
+  "ui": "build/ui.html",
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["https://api.example.com"]
+  }
+}
+```
+
+The local copy/download path works even when the backend is never reached; `networkAccess` is required only because enrichment is an opt-in flow that POSTs to the declared domain. No `enablePrivatePluginApi` (not needed).
 
 **Verification**
 

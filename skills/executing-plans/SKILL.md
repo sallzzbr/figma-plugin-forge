@@ -14,6 +14,7 @@ This skill is a workflow adapter. The canonical method lives in `AGENTS.md` plus
 3. the relevant patterns
 4. the target repo structure
 5. `docs/guides/common-pitfalls.md` — keep open as a checklist during implementation
+6. [`AGENTS.md § Happy path`](../../AGENTS.md#happy-path) — the 7 canonical moves every task must preserve
 
 ### Bundle mode note
 
@@ -32,10 +33,11 @@ For each task in order:
 1. Announce the task by name and list the files it will touch.
 2. Read every file the task references before making changes.
 3. Implement only what the task describes. Do not bundle extra scope.
-4. Run the verification the task lists. If there is no verification, stop and add one before proceeding.
-5. Compare the observed output with the expected outcome stated in the plan and design doc.
-6. If the observed output matches, mark the task complete and move on.
-7. If anything is unclear or diverges, stop and either update the plan or surface the question.
+4. **Happy-path gate:** before writing code, confirm the task still uses the 7 canonical moves from [`AGENTS.md § Happy path`](../../AGENTS.md#happy-path) — manifest shape, `figma.showUI`, `postMessage`-only boundary, typed messages file, `src/main.ts` / `src/ui.tsx` split, esbuild output, no DOM in main / no `figma.*` in UI. If the task diverges, stop and surface the divergence to the user before implementing. Do not invent custom patterns.
+5. Run the verification the task lists. If there is no verification, stop and add one before proceeding.
+6. Compare the observed output with the expected outcome stated in the plan and design doc.
+7. If the observed output matches, mark the task complete and move on.
+8. If anything is unclear or diverges, stop and either update the plan or surface the question.
 
 ## Verification gate
 

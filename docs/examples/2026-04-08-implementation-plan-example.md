@@ -30,7 +30,24 @@ Implement a frame analysis plugin that exports selected frames, sends them with 
 
 **Outcome**
 
-The project has a clear main/UI split, renders a basic UI, and can open inside Figma.
+The project has a clear main/UI split, renders a basic UI, and can open inside Figma. `manifest.json` matches the `llm-analysis` archetype per [`docs/snippets/manifest.md`](../snippets/manifest.md):
+
+```json
+{
+  "name": "Frame Review Assistant",
+  "id": "YOUR_PLUGIN_ID",
+  "api": "1.0.0",
+  "editorType": ["figma"],
+  "main": "build/main.js",
+  "ui": "build/ui.html",
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["https://api.example.com"]
+  }
+}
+```
+
+No `enablePrivatePluginApi` (not needed). Replace `https://api.example.com` with the actual backend host at deploy time.
 
 **Verification**
 

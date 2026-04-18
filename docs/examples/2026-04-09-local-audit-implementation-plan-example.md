@@ -30,7 +30,21 @@ Implement a local-only contrast auditor that walks the current Figma page, compu
 
 **Outcome**
 
-The project has a clear main/UI split, boots a placeholder UI, and opens without runtime boundary violations.
+The project has a clear main/UI split, boots a placeholder UI, and opens without runtime boundary violations. `manifest.json` matches the `local-audit` archetype per [`docs/snippets/manifest.md`](../snippets/manifest.md) — minimal, with no network access:
+
+```json
+{
+  "name": "Contrast Auditor",
+  "id": "YOUR_PLUGIN_ID",
+  "api": "1.0.0",
+  "editorType": ["figma"],
+  "main": "build/main.js",
+  "ui": "build/ui.html",
+  "documentAccess": "dynamic-page"
+}
+```
+
+No `networkAccess` block (the plugin never calls out). No `enablePrivatePluginApi` (not needed).
 
 **Verification**
 

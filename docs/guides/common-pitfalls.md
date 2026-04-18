@@ -2,6 +2,8 @@
 
 Errors that every AI (and many humans) makes when building Figma plugins. Each entry follows: **error**, **why it breaks**, **fix**.
 
+These are the 15 most common deviations from the happy path defined in [`AGENTS.md § Happy path`](../../AGENTS.md#happy-path) — read that first, then use this guide to catch specific mistakes.
+
 Read [figma-api-reference.md](figma-api-reference.md) for the full context behind each API.
 
 ---

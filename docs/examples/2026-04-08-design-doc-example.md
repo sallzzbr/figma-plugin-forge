@@ -68,6 +68,14 @@ Selection changes in Figma trigger a normalized message from main to UI. When th
 - Backend request: `{ context, frames: [{ id, name, imageBase64, imageType }] }`
 - Backend response: `{ sections: [{ title, items: [{ summary, severity, nodeId? }] }] }`
 
+## Manifest Decisions
+
+- `editorType`: `["figma"]`. Design-file plugin; FigJam, Slides, and Dev Mode are out of scope for v1.
+- `documentAccess`: `dynamic-page`. The plugin only reads the current page's selection; cross-page traversal is not required.
+- `networkAccess.allowedDomains`: `["https://api.example.com"]` (replace with the actual backend host when deploying). The UI POSTs the exported frames plus context to the backend.
+- `enablePrivatePluginApi`: `false`. `figma.fileKey` is not used.
+- Plugin ID source: placeholder during development; replace with a new ID from the Figma Plugin Dashboard before publishing.
+
 ## Error Handling
 
 - Empty selection disables analysis
