@@ -58,7 +58,7 @@ Exit code `0` on pass, `1` on any failure.
 
 #### Checks
 
-- **Static (always, offline):** `manifest.json` is valid and has required fields; `documentAccess === "dynamic-page"`; `networkAccess.allowedDomains` is a non-empty array; `src/main.ts` (if present) uses no sandbox-forbidden browser APIs (`btoa`/`atob`, `fetch`, `window`, `document`, `localStorage`).
+- **Static (always, offline):** `manifest.json` is valid and has required fields; `documentAccess === "dynamic-page"`; `networkAccess.allowedDomains` is a non-empty array; and the runtime split holds across all `src` files — main-side files use no sandbox-forbidden browser APIs (`btoa`/`atob`, `fetch`, `window`, `document`, `localStorage`) and UI-side files (`.tsx` or framework importers) never reference `figma.*`.
 - **Build (when `node_modules` exists or `--build`):** `npm run build` succeeds; the files named by `manifest.main`/`manifest.ui` exist; the built UI HTML is self-contained (no external `<script src>`/`<link href>`, no leftover placeholders).
 
 #### When to run

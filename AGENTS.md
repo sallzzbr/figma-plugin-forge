@@ -75,7 +75,7 @@ Do not consider a plugin finished until all of these hold. `node scripts/validat
 - `npm run build` and `npm run typecheck` both succeed.
 - `manifest.json`: `documentAccess` is `"dynamic-page"`; `networkAccess.allowedDomains` is a non-empty array (`["none"]` if local-only); `main`/`ui` match the build output and those files exist after build.
 - `build/ui.html` is a single self-contained file — no external `<script src>` / `<link href>`, no leftover placeholders.
-- The main thread uses no browser-only APIs (`btoa`/`atob`, `fetch`, `window`, `document`, `localStorage`); use `figma.base64Encode`, `figma.clientStorage`, and do network calls from the UI.
+- The main thread uses no browser-only APIs (`btoa`/`atob`, `fetch`, `window`, `document`, `localStorage`); use `figma.base64Encode`, `figma.clientStorage`, and do network calls from the UI. Conversely, UI files never reference `figma.*`.
 - Node access that touches pages other than the current one calls `await figma.loadAllPagesAsync()` first.
 - Every message crossing the main ↔ UI boundary is a typed, type-guarded plain object (no raw nodes).
 

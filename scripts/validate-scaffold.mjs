@@ -11,8 +11,9 @@
  *     2. documentAccess === "dynamic-page" (the only valid value).
  *     3. networkAccess.allowedDomains is a non-empty array
  *        (["none"] for local-only plugins; never [] and never omitted).
- *     4. src/main.ts (if present) uses no browser-only APIs that the Figma
- *        sandbox lacks: btoa/atob, fetch, window, document, localStorage.
+ *     4. Runtime split across all src files: main-side files use no browser-only
+ *        APIs the sandbox lacks (btoa/atob, fetch, window, document, localStorage),
+ *        and UI-side files never reference figma.* (which exists only in main).
  *
  *   Build (when node_modules is present, or with --build):
  *     5. `npm run build` succeeds.
@@ -28,7 +29,7 @@
  * Exit codes: 0 on pass, 1 on any failure. No npm dependencies.
  */
 
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
@@ -114,6 +115,14 @@ const SANDBOX_FORBIDDEN = [
   { re: /\blocalStorage\b/, hint: 'use figma.clientStorage (async) instead of localStorage' },
 ]
 
+// figma.* exists only in the main thread; UI files must never reference it.
+const UI_FORBIDDEN = [
+  {
+    re: /\bfigma\s*\./,
+    hint: 'figma.* exists only in the main thread; request data from main via postMessage',
+  },
+]
+
 function stripCommentsAndStrings(source) {
   // Rough strip of line/block comments and string/template literals so we do not
   // flag forbidden words that appear only in comments or message text.
@@ -125,13 +134,55 @@ function stripCommentsAndStrings(source) {
     .replace(/"(?:\\.|[^"\\])*"/g, ' ')
 }
 
-function checkMainSandbox() {
-  const mainPath = join(PLUGIN_DIR, 'src', 'main.ts')
-  if (!existsSync(mainPath)) return // not all layouts use src/main.ts; skip quietly
-  const code = stripCommentsAndStrings(readFileSync(mainPath, 'utf8'))
-  for (const { re, hint } of SANDBOX_FORBIDDEN) {
-    if (re.test(code)) {
-      fail(`src/main.ts uses a browser-only API not available in the Figma sandbox: ${hint}`)
+function walkSrcFiles(dir) {
+  const out = []
+  if (!existsSync(dir)) return out
+  for (const entry of readdirSync(dir)) {
+    if (entry === 'node_modules') continue
+    const full = join(dir, entry)
+    if (statSync(full).isDirectory()) {
+      out.push(...walkSrcFiles(full))
+    } else if (/\.tsx?$/.test(entry) && !/\.d\.ts$/.test(entry)) {
+      out.push(full)
+    }
+  }
+  return out
+}
+
+// A file is UI-side if it is JSX (.tsx) or imports a UI framework. Import
+// detection runs on raw source because string contents are stripped below.
+function isUiFile(file, rawSource) {
+  if (file.endsWith('.tsx')) return true
+  return /\bfrom\s+['"](?:preact|react)(?:\/[^'"]*)?['"]/.test(rawSource)
+}
+
+// Walk every src file and enforce the runtime split: no browser-only APIs on
+// the main side, no figma.* on the UI side. Classification is content-based so
+// it works for any layout, not just src/main.ts.
+function checkRuntimeBoundaries() {
+  const files = walkSrcFiles(join(PLUGIN_DIR, 'src'))
+  for (const file of files) {
+    const raw = readFileSync(file, 'utf8')
+    const code = stripCommentsAndStrings(raw)
+    const rel = file.slice(PLUGIN_DIR.length + 1).split('\\').join('/')
+
+    if (isUiFile(file, raw)) {
+      for (const { re, hint } of UI_FORBIDDEN) {
+        if (re.test(code)) fail(`${rel} (UI side) references a main-thread API: ${hint}`)
+      }
+      continue
+    }
+
+    // Non-UI .ts: treat as main-side when it touches figma.* or is a known main
+    // entry name. A plain shared/types file (no figma, no UI framework) is skipped
+    // because we cannot tell which runtime it ends up in.
+    const base = rel.split('/').pop()
+    if (/\bfigma\s*\./.test(code) || base === 'main.ts' || base === 'code.ts') {
+      for (const { re, hint } of SANDBOX_FORBIDDEN) {
+        if (re.test(code)) {
+          fail(`${rel} (main thread) uses a browser-only API not in the Figma sandbox: ${hint}`)
+        }
+      }
     }
   }
 }
@@ -201,7 +252,7 @@ console.log('')
 
 const manifest = loadManifest()
 checkManifest(manifest)
-checkMainSandbox()
+checkRuntimeBoundaries()
 
 const built = maybeBuild()
 if (built) {
