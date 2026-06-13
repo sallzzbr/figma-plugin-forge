@@ -43,6 +43,29 @@ Exit code `0` on pass, `1` on any failure. All failures are printed with file pa
 - After editing `docs/templates/` (mirror drift is silent otherwise).
 - Before tagging a release or publishing the repo as a reference.
 
+### `validate-scaffold.mjs`
+
+Plugin-correctness check for `templates/starter-plugin/` (or any plugin directory). Catches the
+"basic things wrong" that stop a plugin running in Figma.
+
+```bash
+node scripts/validate-scaffold.mjs                 # static checks; builds if node_modules present
+node scripts/validate-scaffold.mjs --build         # npm install + build, then check outputs
+node scripts/validate-scaffold.mjs --path path/to/plugin
+```
+
+Exit code `0` on pass, `1` on any failure.
+
+#### Checks
+
+- **Static (always, offline):** `manifest.json` is valid and has required fields; `documentAccess === "dynamic-page"`; `networkAccess.allowedDomains` is a non-empty array; `src/main.ts` (if present) uses no sandbox-forbidden browser APIs (`btoa`/`atob`, `fetch`, `window`, `document`, `localStorage`).
+- **Build (when `node_modules` exists or `--build`):** `npm run build` succeeds; the files named by `manifest.main`/`manifest.ui` exist; the built UI HTML is self-contained (no external `<script src>`/`<link href>`, no leftover placeholders).
+
+#### When to run
+
+- After editing `templates/starter-plugin/` (use `--build` to confirm it still compiles).
+- As the Definition-of-Done gate for a generated plugin (`--path <plugin-dir>`).
+
 ## Adding new scripts
 
 - One file per script, named `<purpose>.mjs`.

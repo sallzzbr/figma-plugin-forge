@@ -15,6 +15,8 @@ Its primary outputs are:
 
 This repository is not a buildable monorepo of plugin applications. Implementation code should usually live in the user's target repo, not here, unless the user is explicitly improving this method repository.
 
+The one exception is [`templates/starter-plugin/`](templates/starter-plugin/): a single, build-verified scaffold that exists precisely so generation is deterministic. It is copied verbatim into the target repo as the starting point — not retyped from prose. `scripts/validate-scaffold.mjs` keeps it (and any plugin you point it at) honest about the basics.
+
 ## Canonical source of truth
 
 `AGENTS.md` plus `docs/` are the canonical source of truth for this repo.
@@ -37,8 +39,9 @@ Use this order unless the user gives a more specific path:
 When writing implementation code, also read:
 
 7. [docs/guides/figma-api-reference.md](docs/guides/figma-api-reference.md) — curated API with gotchas and correct examples
-8. [docs/guides/common-pitfalls.md](docs/guides/common-pitfalls.md) — the 15 most common mistakes
+8. [docs/guides/common-pitfalls.md](docs/guides/common-pitfalls.md) — the most common mistakes
 9. [docs/guides/project-setup.md](docs/guides/project-setup.md) — opinionated stack for new projects
+10. [templates/starter-plugin/](templates/starter-plugin/) — the verified scaffold to copy; validate with `node scripts/validate-scaffold.mjs`
 
 ## Responsibility by surface
 
@@ -50,6 +53,8 @@ When writing implementation code, also read:
 - `docs/templates/`: blank artifacts
 - `docs/examples/`: filled artifacts that prove the method
 - `docs/plans/`: active, user-generated work artifacts
+- `templates/starter-plugin/`: the canonical, build-verified scaffold to copy when implementing
+- `scripts/`: validation — `validate-docs.mjs` (editorial drift) and `validate-scaffold.mjs` (plugin basics)
 - `skills/`: thin workflow adapters
 - `.claude-plugin/`, `.cursor-plugin/`, `.codex/`, `hooks/`: optional assistant-specific adapters
 
@@ -59,9 +64,20 @@ When writing implementation code, also read:
 2. Pick the closest pattern
 3. Write a design doc
 4. Write an implementation plan
-5. Implement in the target repo
-6. Review against the plan and runtime rules
+5. Implement in the target repo — start by copying `templates/starter-plugin/` verbatim, then modify it. Do not re-derive `manifest.json`, `build.mjs`, or `tsconfig.json` from prose.
+6. Review against the plan, the runtime rules, and the Definition of Done below
 7. Feed reusable improvements back into this method repo
+
+## Definition of Done (every generated plugin must pass)
+
+Do not consider a plugin finished until all of these hold. `node scripts/validate-scaffold.mjs --path <plugin-dir>` checks the mechanical ones.
+
+- `npm run build` and `npm run typecheck` both succeed.
+- `manifest.json`: `documentAccess` is `"dynamic-page"`; `networkAccess.allowedDomains` is a non-empty array (`["none"]` if local-only); `main`/`ui` match the build output and those files exist after build.
+- `build/ui.html` is a single self-contained file — no external `<script src>` / `<link href>`, no leftover placeholders.
+- The main thread uses no browser-only APIs (`btoa`/`atob`, `fetch`, `window`, `document`, `localStorage`); use `figma.base64Encode`, `figma.clientStorage`, and do network calls from the UI.
+- Node access that touches pages other than the current one calls `await figma.loadAllPagesAsync()` first.
+- Every message crossing the main ↔ UI boundary is a typed, type-guarded plain object (no raw nodes).
 
 ## Runtime rules
 
@@ -87,7 +103,7 @@ Communication:
 - Prefer AGENTS-first over tool-specific setup
 - Prefer patterns over fake framework packaging
 - Prefer explicit contracts over hidden conventions
-- Treat examples and snippets as illustrative, not canonical production code
+- Treat examples and snippets as illustrative, not canonical production code — but `templates/starter-plugin/` is canonical and verified; copy it verbatim rather than reconstructing it
 - Preserve assistant agnosticism unless the user explicitly asks for a tool-specific path
 
 ## Assistant adapters

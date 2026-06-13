@@ -25,6 +25,10 @@ git clone https://github.com/sallzzbr/figma-plugin-forge.git ../figma-plugin-for
 
 Then reference patterns as `../figma-plugin-forge/docs/patterns/local-audit.md`. Do not skip pattern reading — it defines the architecture the plan assumes.
 
+## Scaffold first
+
+When the plan creates a new plugin (rather than editing an existing one), the first task is to copy [`templates/starter-plugin/`](../../templates/starter-plugin/) into the target repo verbatim, then adapt it. Do not retype `manifest.json`, `build.mjs`, or `tsconfig.json` from the guides — that is where the "basic things wrong" come from. The scaffold already encodes the correct manifest, build, and runtime wiring.
+
 ## Execution checklist
 
 For each task in order:
@@ -47,6 +51,8 @@ Do not mark a task complete until:
 If the verification command cannot be run in the current environment, say so explicitly and ask the user how to proceed. Do not mark the task complete based on "it looks right".
 
 If the verification output is ambiguous, surface it to the user with the raw output and the expected shape, and wait for a decision before continuing.
+
+Before declaring the whole plugin done, run the Definition of Done in `AGENTS.md` — including `node scripts/validate-scaffold.mjs --path <plugin-dir>` (or, in bundle mode, `../figma-plugin-forge/scripts/validate-scaffold.mjs`) plus `npm run build` and `npm run typecheck` in the plugin.
 
 ## Doc-sync rule
 
