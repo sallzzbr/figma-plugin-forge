@@ -223,21 +223,30 @@ const node = selection[0]
 
 ---
 
-## 11. Wrong `documentAccess` in manifest.json
+## 11. Accessing other pages without loading them under `dynamic-page`
 
 **Error:**
 ```json
-{
-  "documentAccess": "dynamic-page"
-}
+{ "documentAccess": "dynamic-page" }
 ```
-... but the plugin tries to access nodes on pages other than the current one.
+```ts
+// ... then, in main.ts:
+const pages = figma.root.children   // throws under dynamic-page
+```
 
-**Why it breaks:** `dynamic-page` restricts API access to `figma.currentPage` only. To access other pages, use `"documentAccess": "dynamic"` (which prompts the user for permission).
+**Why it breaks:** `"dynamic-page"` is the **only** valid value for `documentAccess`, and it is required for all new plugins. There is no `"dynamic"` mode and no permission prompt — that does not exist. Under `dynamic-page` the current page is loaded, but other pages are not. Reading `figma.root.children`, another page's nodes, or a `getNodeByIdAsync` result that lives on another page throws unless you load pages first.
 
-**Fix:** Choose the right access level:
-- `"dynamic-page"` (default): access current page only. Cheapest, safest.
-- `"dynamic"`: access the whole document. User sees a permission prompt.
+**Fix:** Load the pages you need before traversing them.
+```ts
+// Need the whole document?
+await figma.loadAllPagesAsync()
+const pages = figma.root.children   // now safe
+
+// Or just one other page:
+const page = figma.root.children.find((p) => p.name === 'Specs')
+await page?.loadAsync()
+```
+Current-page-only work needs no loading: `figma.currentPage.selection` and `figma.currentPage.findAll(...)` work directly.
 
 ---
 
@@ -245,18 +254,18 @@ const node = selection[0]
 
 **Error:** The UI tries to `fetch` an external API but the request silently fails or is blocked.
 
-**Why it breaks:** Figma sandboxes network access. The manifest must declare which domains the UI is allowed to reach.
+**Why it breaks:** Figma sandboxes network access. `networkAccess` is **required**, and `allowedDomains` must be a non-empty array — either the domains the UI reaches, or the special value `["none"]`. An empty array (`[]`) and omitting `networkAccess` are both wrong.
 
 **Fix:**
 ```json
-{
-  "networkAccess": {
-    "allowedDomains": ["https://api.example.com"]
-  }
-}
+// Plugin that calls an API:
+{ "networkAccess": { "allowedDomains": ["https://api.example.com"] } }
+
+// Local-only plugin (no network at all):
+{ "networkAccess": { "allowedDomains": ["none"] } }
 ```
 
-**Rule:** only declare the domains you actually use. Wildcard `"*"` is not recommended.
+**Rule:** always include `networkAccess`. Use `["none"]` when local-only, never `[]`. Declare only the domains you actually use; wildcard `"*"` is not recommended.
 
 ---
 
@@ -293,24 +302,41 @@ node.fills = [{ type: 'SOLID', color: { r: 1, g: 0, b: 0 } }]  // red
 
 ---
 
-## 15. Not inlining HTML for `__html__`
+## 15. UI HTML that is not self-contained (blank `__html__` panel)
 
 **Error:** `figma.showUI(__html__)` shows a blank panel.
 
-**Why it breaks:** `__html__` is a magic global that your bundler must replace with the actual HTML content as a string at build time. If your build does not inline it, the variable is `undefined` or empty.
+**Why it breaks:** `__html__` is **not** injected by your bundler. Figma's runtime sets it to the contents of the file named in the manifest `ui` field. The panel is blank when (a) the `ui` field points to the wrong/missing file, or (b) that HTML references external files (`<script src>`, `<link href>`) — the sandboxed iframe cannot fetch sibling files, so the CSS/JS never load.
 
-**Fix:** Configure your bundler to inline the HTML. With esbuild:
+**Fix:** Build a single self-contained HTML file (CSS and JS inlined) and point `ui` at it. The build script in [project-setup.md](project-setup.md) does this by replacing placeholders in `src/ui.html`:
 ```js
-// in build config
-esbuild.build({
-  entryPoints: ['src/ui.tsx'],
-  bundle: true,
-  outfile: 'build/ui.js',
-  // then use a script to wrap the JS output into an HTML string
-})
+const html = template
+  .replace('/* CSS_PLACEHOLDER */', () => css)   // function form: $ in JS is not a special pattern
+  .replace('/* JS_PLACEHOLDER */', () => js)
+writeFileSync('build/ui.html', html)   // manifest "ui" points here
 ```
 
-See [project-setup.md](project-setup.md) for the complete build configuration.
+The canonical, verified version lives in [`templates/starter-plugin/`](../../templates/starter-plugin/) — copy it instead of reinventing the build.
+
+---
+
+## 16. Browser-only APIs in the main thread (no `btoa`, `fetch`, `window`)
+
+**Error:**
+```ts
+// in main.ts
+const base64 = btoa(binaryString)   // ReferenceError: btoa is not defined
+```
+
+**Why it breaks:** The Figma main-thread sandbox is a minimal JS environment with no DOM and no browser globals. `btoa`/`atob`, `fetch`, `window`, `document`, and `localStorage` do not exist there. (See also #8 and #9.)
+
+**Fix:** Use the Figma equivalents in main, or move the work to the UI iframe.
+```ts
+const base64 = figma.base64Encode(bytes)   // Uint8Array -> base64
+// figma.base64Decode(str) for the reverse
+// persistence: figma.clientStorage.getAsync / setAsync (async)
+// network: fetch from the UI iframe, never from main
+```
 
 ---
 
@@ -328,11 +354,12 @@ See [project-setup.md](project-setup.md) for the complete build configuration.
 | 8 | `figma.*` in UI | Use postMessage from main |
 | 9 | `fetch` in main | Fetch from UI only |
 | 10 | Empty selection | Check `selection.length` |
-| 11 | Wrong documentAccess | Match to actual page access needs |
-| 12 | Missing networkAccess | Declare domains in manifest |
+| 11 | Other pages under `dynamic-page` | `await figma.loadAllPagesAsync()` first |
+| 12 | Missing/empty networkAccess | Always include; `["none"]` if local-only |
 | 13 | Sync variable methods | Use `Async` variants |
 | 14 | Colors as 0-255 | Use 0-1 floats |
-| 15 | `__html__` blank | Configure bundler to inline HTML |
+| 15 | UI HTML not self-contained | Inline CSS+JS into the `ui` file |
+| 16 | Browser APIs in main | `figma.base64Encode`; fetch from UI |
 
 ## Related
 

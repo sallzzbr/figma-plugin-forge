@@ -87,11 +87,8 @@ figma.ui.onmessage = async (raw: unknown) => {
             format: raw.format === 'svg' ? 'SVG' : raw.format === 'jpg' ? 'JPG' : 'PNG',
             constraint: { type: 'WIDTH', value: 800 },
           })
-          let binary = ''
-          for (let i = 0; i < bytes.length; i++) {
-            binary += String.fromCharCode(bytes[i])
-          }
-          frames.push({ id: node.id, name: node.name, base64: btoa(binary) })
+          // The sandbox has no `btoa`; use figma.base64Encode for binary -> base64.
+          frames.push({ id: node.id, name: node.name, base64: figma.base64Encode(bytes) })
         }
         postToUi({ type: 'export-selection-response', frames })
       } catch (err) {

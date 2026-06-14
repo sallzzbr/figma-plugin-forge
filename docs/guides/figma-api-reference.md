@@ -8,7 +8,7 @@ Every section follows the same shape: **what it is**, **gotcha**, **correct exam
 
 ### What it is
 
-Every element on a Figma canvas is a node. Nodes form a tree rooted at `figma.root`. The most common types:
+Every element on a Figma canvas is a node. Nodes form a tree rooted at `figma.root` (the document), whose children are `PageNode`s. The most common types:
 
 | Type | When you see it | Key properties |
 | --- | --- | --- |
@@ -23,6 +23,8 @@ Every element on a Figma canvas is a node. Nodes form a tree rooted at `figma.ro
 | `BooleanOperationNode` | Union/subtract/intersect | `booleanOperation`, `children` |
 
 The union type `SceneNode` covers all nodes that can appear on a page. It is the type of elements inside `children` arrays and `selection`.
+
+> **`dynamic-page` (the required `documentAccess` mode):** the current page is always loaded, so `figma.currentPage`, its `selection`, and `findAll`/`findOne` on it work synchronously. But pages other than the current one are *not* loaded. Before reading `figma.root.children`, another page's nodes, or `figma.getNodeByIdAsync` results from another page, call `await figma.loadAllPagesAsync()` (or `await someOtherPage.loadAsync()`) first. Skipping this throws at runtime.
 
 ### Gotcha
 
@@ -149,12 +151,9 @@ async function exportFrameAsBase64(
     constraint: { type: 'WIDTH', value: maxWidth },
   })
 
-  // Convert Uint8Array to base64 for postMessage or backend
-  let binary = ''
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i])
-  }
-  return btoa(binary)
+  // Convert Uint8Array to base64 for postMessage or backend.
+  // The main-thread sandbox has no `btoa`; use figma.base64Encode.
+  return figma.base64Encode(bytes)
 }
 ```
 
@@ -210,9 +209,13 @@ Figma variables (`figma.variables`) hold design tokens (colors, numbers, strings
 ```ts
 async function getColorVariables(): Promise<Array<{ name: string; hex: string }>> {
   const variables = await figma.variables.getLocalVariablesAsync('COLOR')
-  return variables.map((v) => {
-    // Variables can have multiple modes; read the default mode
-    const collection = figma.variables.getVariableCollectionById(v.variableCollectionId)
+  const out: Array<{ name: string; hex: string }> = []
+  for (const v of variables) {
+    // Variables can have multiple modes; read the default mode.
+    // The collection getter is async too — the sync getVariableCollectionById is removed.
+    const collection = await figma.variables.getVariableCollectionByIdAsync(
+      v.variableCollectionId,
+    )
     const defaultModeId = collection?.defaultModeId ?? ''
     const value = v.valuesByMode[defaultModeId]
 
@@ -223,8 +226,9 @@ async function getColorVariables(): Promise<Array<{ name: string; hex: string }>
       hex = `#${toHex(r)}${toHex(g)}${toHex(b)}`
     }
 
-    return { name: v.name, hex }
-  })
+    out.push({ name: v.name, hex })
+  }
+  return out
 }
 ```
 
@@ -329,7 +333,7 @@ Key points:
 
 ### What it is
 
-- `figma.showUI(__html__, { width, height })` opens the UI panel. `__html__` is a magic global injected by the bundler from your HTML file.
+- `figma.showUI(__html__, { width, height })` opens the UI panel. `__html__` is a magic global whose value is the contents of the file named by the `ui` field in `manifest.json`, injected by Figma's runtime — not by your bundler.
 - `figma.closePlugin(message?)` closes the plugin. Optional message shows as a toast.
 - `figma.notify(message, options?)` shows a toast notification without closing.
 - `figma.on('selectionchange', callback)` fires when the user changes their selection.
@@ -337,7 +341,7 @@ Key points:
 
 ### Gotcha
 
-1. **`__html__` is not a file path.** It is the HTML content as a string, inlined by the bundler at build time. If your build does not inline it, `figma.showUI(__html__)` shows an empty panel.
+1. **`__html__` is not a file path.** It is the HTML content as a string, which Figma injects at runtime from the file named in the manifest `ui` field. Your bundler does **not** put HTML into `main.js`. What you must get right: (a) the manifest `ui` field points to the built HTML file, and (b) that HTML is self-contained — CSS and JS inlined into the one file — because the iframe cannot fetch sibling files. If the `ui` HTML is missing or references external files, the panel is blank.
 2. **`figma.closePlugin()` is final.** After calling it, no more API calls work. Close only when you are truly done.
 3. **`figma.notify` supports `error: true` and `timeout` options.** Use `figma.notify('Something went wrong', { error: true })` for error toasts.
 
@@ -354,7 +358,8 @@ Key points:
 | Load font | `figma.loadFontAsync(fontName)` | Yes | Passing a string instead of `{ family, style }` |
 | Save settings | `figma.clientStorage.setAsync(k, v)` | Yes | Not versioning keys |
 | Get variables | `figma.variables.getLocalVariablesAsync()` | Yes | Calling sync version that no longer exists |
-| Show UI | `figma.showUI(__html__, opts)` | No | Not inlining HTML in build |
+| Show UI | `figma.showUI(__html__, opts)` | No | `ui` HTML not self-contained, or manifest `ui` path wrong |
+| Encode bytes | `figma.base64Encode(bytes)` | No | Using `btoa` (absent in the sandbox) |
 | Notify user | `figma.notify(msg, opts)` | No | Using `console.log` instead (invisible to user) |
 | Close plugin | `figma.closePlugin(msg?)` | No | Calling API after close |
 

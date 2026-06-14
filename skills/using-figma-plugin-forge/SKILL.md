@@ -35,6 +35,10 @@ If you are in bundle mode and need the full pattern catalog or an end-to-end exa
 
 If this skill ever disagrees with `AGENTS.md` or `docs/`, follow `AGENTS.md` plus `docs/`.
 
+## Implementing a plugin
+
+When it is time to write code, copy [`templates/starter-plugin/`](../../templates/starter-plugin/) verbatim as the starting point and adapt it — do not reconstruct the manifest/build/config from the guides. Validate with `node scripts/validate-scaffold.mjs --path <plugin-dir>` and check the Definition of Done in `AGENTS.md`.
+
 ## Maintenance note
 
-If you change templates, patterns, or integration docs, review `docs/guides/maintaining-the-method.md` and run `node scripts/validate-docs.mjs` to catch mirror drift.
+If you change templates, patterns, or integration docs, review `docs/guides/maintaining-the-method.md` and run `node scripts/validate-docs.mjs` to catch mirror drift. If you change `templates/starter-plugin/`, run `node scripts/validate-scaffold.mjs --build` to confirm it still compiles cleanly.

@@ -25,7 +25,7 @@
  * regex iteration (not child_process).
  */
 
-import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
+import { readFileSync, readdirSync, statSync, existsSync, lstatSync } from 'node:fs'
 import { join, dirname, resolve, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -37,6 +37,21 @@ const REPO_ROOT = resolve(__dirname, '..')
 
 function toPosix(p) {
   return p.split('\\').join('/')
+}
+
+// Whether a repo entry is present. A tracked-but-dangling symlink (such as the
+// intentional CLAUDE.md alias, whose "target" is descriptive text, not a path)
+// still exists as a versioned entry even though existsSync follows it to a
+// non-existent target. lstatSync does not follow the link, so it reports the
+// entry itself as present.
+function entryPresent(p) {
+  if (existsSync(p)) return true
+  try {
+    lstatSync(p)
+    return true
+  } catch {
+    return false
+  }
 }
 
 function walk(dir, filter) {
@@ -370,7 +385,7 @@ function checkIntegrationMatrix() {
       // Skip obvious non-paths like "None"
       if (!/[./\\]/.test(asset)) continue
       const assetPath = join(REPO_ROOT, asset)
-      if (!existsSync(assetPath)) {
+      if (!entryPresent(assetPath)) {
         failures.push({
           file: 'docs/guides/assistant-integrations.md',
           line: i + 1,

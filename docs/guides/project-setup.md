@@ -1,5 +1,11 @@
 # Project Setup — Opinionated Stack
 
+> **Don't hand-build this from the prose below.** The canonical, build-verified scaffold lives
+> in [`templates/starter-plugin/`](../../templates/starter-plugin/). Copy that whole directory into
+> the target repo, then modify it. Run `node scripts/validate-scaffold.mjs` to confirm the basics
+> stay correct. This guide explains what each piece does and why; it is the reference, not the source
+> the assistant should retype.
+
 This guide sets up a working Figma plugin project from zero using the recommended stack. Follow it when creating the target repo for a plugin designed with this method.
 
 ## Recommended Stack
@@ -62,16 +68,15 @@ my-figma-plugin/
   "ui": "build/ui.html",
   "documentAccess": "dynamic-page",
   "networkAccess": {
-    "allowedDomains": []
+    "allowedDomains": ["none"]
   }
 }
 ```
 
 Notes:
 - Get your plugin ID from [Figma Plugin Dashboard](https://www.figma.com/developers)
-- Set `documentAccess` to `"dynamic"` only if you need to access pages other than the current one
-- Add backend domains to `allowedDomains` only if the UI makes network calls
-- Remove `networkAccess` entirely if the plugin is local-only
+- `documentAccess` must be `"dynamic-page"` — it is the only valid value and is required. To reach pages other than the current one, call `await figma.loadAllPagesAsync()` in the main thread first (see [common-pitfalls.md](common-pitfalls.md#11-accessing-other-pages-without-loading-them-under-dynamic-page)).
+- `networkAccess` is required. Use `["none"]` for a local-only plugin (never `[]`, never omit it). Add backend domains to `allowedDomains` when the UI makes network calls.
 
 ## package.json
 
@@ -121,7 +126,7 @@ Add Tailwind if using it:
     "noEmit": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "typeRoots": ["./node_modules/@figma/plugin-typings", "./node_modules/@types"]
+    "typeRoots": ["./node_modules/@figma", "./node_modules/@types"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }
@@ -129,7 +134,7 @@ Add Tailwind if using it:
 
 Key points:
 - `jsxImportSource: "preact"` makes JSX work with Preact without manual imports
-- `typeRoots` must include `@figma/plugin-typings` so `figma.*`, `__html__`, and node types are available
+- `typeRoots` points at the `@figma` directory (not at `@figma/plugin-typings` inside it) so the typings package is discovered and `figma.*`, `__html__`, and node types are available globally. Pointing it *inside* the package silently breaks every `figma.*` type.
 - `noEmit: true` because esbuild handles the actual compilation
 
 ## tailwind.config.js
@@ -197,9 +202,11 @@ body {
 </html>
 ```
 
-The build script replaces `/* CSS_PLACEHOLDER */` and `/* JS_PLACEHOLDER */` with the actual built CSS and JS. This produces a single self-contained HTML file that Figma can load as `__html__`.
+The build script replaces `/* CSS_PLACEHOLDER */` and `/* JS_PLACEHOLDER */` with the actual built CSS and JS, producing a single self-contained `build/ui.html`. The manifest `ui` field points at that file, and Figma exposes its contents to the main thread as `__html__` at runtime. Everything must be inlined because the sandboxed iframe cannot fetch sibling files.
 
 ## build.mjs
+
+This is the same `build.mjs` shipped in [`templates/starter-plugin/`](../../templates/starter-plugin/build.mjs). Two details that are easy to get wrong: (1) CSS and HTML inlining must run on **every** rebuild, including in watch mode — so they hang off esbuild's `onEnd`, not after a one-shot build; (2) the placeholder replacements use the **function form** (`() => css`) so `$` sequences inside the bundled JS are not treated as special replacement patterns.
 
 ```js
 import { build, context } from 'esbuild'
@@ -208,34 +215,13 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 
 const isWatch = process.argv.includes('--watch')
 
-// --- Build main thread ---
-const mainOptions = {
-  entryPoints: ['src/main.ts'],
-  bundle: true,
-  outfile: 'build/main.js',
-  target: 'es2020',
-  format: 'iife',
-}
-
-// --- Build UI ---
-const uiOptions = {
-  entryPoints: ['src/ui.tsx'],
-  bundle: true,
-  outfile: 'build/ui.js',
-  target: 'es2020',
-  format: 'iife',
-  jsxImportSource: 'preact',
-  jsx: 'automatic',
-  loader: { '.css': 'empty' },  // CSS handled separately by Tailwind
-}
-
 function buildCSS() {
   try {
     execFileSync('npx', [
       'tailwindcss', '-i', 'src/input.css', '-o', 'build/ui.css', '--minify'
     ], { stdio: 'pipe' })
   } catch {
-    console.warn('Tailwind not installed or failed; skipping CSS build')
+    console.warn('Tailwind not installed or failed; continuing without CSS')
   }
 }
 
@@ -247,14 +233,51 @@ function inlineHTML() {
   try { css = readFileSync('build/ui.css', 'utf8') } catch { /* no CSS */ }
   try { js = readFileSync('build/ui.js', 'utf8') } catch { /* no JS */ }
 
+  // Function replacements so `$` in the bundled JS/CSS is not a special pattern.
   const html = template
-    .replace('/* CSS_PLACEHOLDER */', css)
-    .replace('/* JS_PLACEHOLDER */', js)
+    .replace('/* CSS_PLACEHOLDER */', () => css)
+    .replace('/* JS_PLACEHOLDER */', () => js)
 
   writeFileSync('build/ui.html', html)
 }
 
+// Rebuild CSS + re-inline HTML after every successful UI build (incl. watch).
+const htmlPlugin = {
+  name: 'inline-ui-html',
+  setup(pluginBuild) {
+    pluginBuild.onEnd((result) => {
+      if (result.errors.length === 0) {
+        buildCSS()
+        inlineHTML()
+      }
+    })
+  },
+}
+
+const mainOptions = {
+  entryPoints: ['src/main.ts'],
+  bundle: true,
+  outfile: 'build/main.js',
+  target: 'es2020',
+  format: 'iife',
+  minify: !isWatch,
+}
+
+const uiOptions = {
+  entryPoints: ['src/ui.tsx'],
+  bundle: true,
+  outfile: 'build/ui.js',
+  target: 'es2020',
+  format: 'iife',
+  jsx: 'automatic',
+  jsxImportSource: 'preact',
+  loader: { '.css': 'empty' },  // CSS handled separately by Tailwind
+  minify: !isWatch,
+  plugins: [htmlPlugin],
+}
+
 async function run() {
+  mkdirSync('build', { recursive: true })
   if (isWatch) {
     const mainCtx = await context(mainOptions)
     const uiCtx = await context(uiOptions)
@@ -263,9 +286,7 @@ async function run() {
     console.log('watching for changes...')
   } else {
     await build(mainOptions)
-    await build(uiOptions)
-    buildCSS()
-    inlineHTML()
+    await build(uiOptions)  // onEnd runs buildCSS() + inlineHTML()
     console.log('build complete')
   }
 }
@@ -378,6 +399,17 @@ dist/
 - A single `build/ui.html` that works as `__html__` in `figma.showUI`
 - Tailwind CSS for utility-first styling with Figma-appropriate defaults
 - A clear separation between main thread and UI iframe
+
+## Alternative: `@create-figma-plugin`
+
+If you would rather not own a build script at all, [`@create-figma-plugin`](https://yuanqing.github.io/create-figma-plugin/)
+is a proven toolchain (it is what earlier versions of this repo's plugins used). `build-figma-plugin --typecheck --minify`
+bundles `src/main.ts` and `src/ui.tsx` and inlines the UI into a single `build/ui.html` for you — removing the
+`__html__`/inlining/watch class of mistakes entirely. The trade-offs: it is heavier, expects `export default`
+entry functions, and reads its manifest from a `"figma-plugin"` key in `package.json` rather than a standalone
+`manifest.json`. The lightweight esbuild scaffold above is the default here; reach for `@create-figma-plugin`
+when you want the framework to own the wiring. The same correctness rules (`documentAccess`, `networkAccess`,
+async node access, no browser APIs in main) apply either way.
 
 ## Related
 
