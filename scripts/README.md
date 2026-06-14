@@ -1,6 +1,6 @@
 # Scripts
 
-Editorial and maintenance scripts for `figma-plugin-forge`. These are not part of the canonical method (which lives in `AGENTS.md` plus `docs/`). They are tools that protect the method from drift.
+Editorial and maintenance scripts for `figma-plugin-forge`. These are not part of the canonical method (which lives in the `skills/` tree). They are tools that protect the method from drift.
 
 ## Runtime
 
@@ -10,38 +10,17 @@ Editorial and maintenance scripts for `figma-plugin-forge`. These are not part o
 
 ## Scripts
 
-### `validate-docs.mjs`
+### `validate-links.mjs`
 
-Editorial drift check. Run before committing method changes.
+Link/reference integrity across the method surfaces (`README.md`, `AGENTS.md`, `skills/`, `commands/`, `agents/`, `.cursor/`, `templates/`). Since `skills/` is the single source of truth and everything else points into it, this keeps those pointers honest.
 
 ```bash
-node scripts/validate-docs.mjs
+node scripts/validate-links.mjs
 ```
 
-Exit code `0` on pass, `1` on any failure. All failures are printed with file paths and line numbers.
+Checks: (1) relative markdown links resolve; (2) no machine-local absolute paths; (3) backticked repo paths (`skills/...`, `templates/...`, etc.) point at files/dirs that exist. Exit `0` on pass, `1` on failure.
 
-#### Checks
-
-1. **Relative link targets exist.** Every markdown link in a tracked documentation file (root `README.md`, `AGENTS.md`, `CLAUDE.md`, everything under `docs/` and `skills/`, and the adapter README files) must resolve to a real file on disk. Anchors and query strings are ignored. External URLs (http, https, mailto) are skipped. Content inside fenced code blocks is ignored so code examples cannot produce false positives.
-2. **No machine-local absolute paths.** Flags patterns like `C:\Users\`, `/home/<name>`, `/Users/<name>` in versioned docs. Content inside fenced code blocks and inline backticks is ignored so meta-examples of bad paths (such as the one in `docs/guides/maintaining-the-method.md`) do not count as leaks.
-3. **Archetype coverage.** Every archetype listed under `## Archetypes` in `docs/patterns/README.md` must have at least one example file in `docs/examples/` that references `docs/patterns/<archetype>.md` in its first 30 lines. Archetypes explicitly listed as `_no example yet ..._` in `docs/examples/README.md` are exempt.
-4. **Mirror drift.** Every skill file that declares `> Mirror provenance: [name](path)` must have a fenced markdown block whose heading set exactly matches the headings of the canonical file at `path`. This catches cases where the canonical template changes but the embedded mirror in the skill does not.
-5. **Integration matrix consistency.** Every backticked asset path named in the `Assets in repo` column of `docs/guides/assistant-integrations.md` must exist on disk.
-
-#### How to fix typical failures
-
-- **Broken link**: either rename/recreate the target file or update the link. If the link is correct but points to a file that should exist, create it. If the link is obsolete, remove it.
-- **Absolute path**: replace with a path relative to the repo root, or wrap in inline backticks if it is a meta-example that should not be treated as a real path.
-- **Missing archetype example**: either add a design-doc and implementation-plan example pair under `docs/examples/` that references the archetype, or mark the archetype as a known gap in `docs/examples/README.md` with the `_no example yet_` phrase.
-- **Mirror drift**: update the `\`\`\`markdown` block inside the skill file to match the canonical template in `docs/templates/`. The canonical file is authoritative; the mirror must follow.
-- **Matrix inconsistency**: either create the missing asset or remove its mention from the matrix. Adding an asset to the matrix without creating it on disk is a promise the repo does not keep.
-
-#### When to run
-
-- Before committing any change to `docs/`, `skills/`, `AGENTS.md`, `README.md`, `CLAUDE.md`, or adapter metadata.
-- After renaming or moving any file in the tracked set.
-- After editing `docs/templates/` (mirror drift is silent otherwise).
-- Before tagging a release or publishing the repo as a reference.
+The editorial guidance for maintaining the method now lives in `skills/using-figma-plugin-forge/references/maintaining-the-method.md`.
 
 ### `validate-scaffold.mjs`
 
@@ -58,7 +37,7 @@ Exit code `0` on pass, `1` on any failure.
 
 #### Checks
 
-- **Static (always, offline):** `manifest.json` is valid and has required fields; `documentAccess === "dynamic-page"`; `networkAccess.allowedDomains` is a non-empty array; and the runtime split holds across all `src` files — main-side files use no sandbox-forbidden browser APIs (`btoa`/`atob`, `fetch`, `window`, `document`, `localStorage`) and UI-side files (`.tsx` or framework importers) never reference `figma.*`.
+- **Static (always, offline):** `manifest.json` is valid and has required fields; `documentAccess === "dynamic-page"`; `networkAccess.allowedDomains` is a non-empty array; the runtime split holds across all `src` files — main-side files use no sandbox-forbidden browser APIs (`btoa`/`atob`, `fetch`, `window`, `document`, `localStorage`) and UI-side files (`.tsx` or framework importers) never reference `figma.*`; `package.json` declares `build`/`typecheck`/`lint`/`test` scripts with at least one test file and no obvious secrets in `src/`; and for backend plugins (`src/backend/` present) `networkAccess` declares real domains and backend files never reference `figma.*`.
 - **Build (when `node_modules` exists or `--build`):** `npm run build` succeeds; the files named by `manifest.main`/`manifest.ui` exist; the built UI HTML is self-contained (no external `<script src>`/`<link href>`, no leftover placeholders).
 
 #### When to run

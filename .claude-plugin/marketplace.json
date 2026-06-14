@@ -1,14 +1,14 @@
 {
   "name": "figma-plugin-forge",
-  "description": "Marketplace for figma-plugin-forge — a docs-first method for building Figma plugins with AI",
+  "description": "Marketplace for figma-plugin-forge — a Claude Code plugin for building Figma plugins.",
   "owner": {
     "name": "Antonio Salgado"
   },
   "plugins": [
     {
       "name": "figma-plugin-forge",
-      "description": "Complete method for designing and building Figma plugins with AI — skills, patterns, API reference, and typed snippets",
-      "version": "0.3.0",
+      "description": "Build Figma plugins well — skills, commands, agents, and verified templates (local or backend), with a typed message bridge and an agnostic backend layer.",
+      "version": "0.4.0",
       "source": "./",
       "author": {
         "name": "Antonio Salgado"

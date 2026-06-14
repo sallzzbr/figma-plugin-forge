@@ -5,31 +5,22 @@ description: Use when working with the Figma Plugin API — runtime boundaries, 
 
 # Figma API Patterns
 
-This skill is a workflow adapter with an inline quick-reference. The canonical method lives in `AGENTS.md` plus `docs/`.
+Quick references for the Figma Plugin API, plus deeper material in this skill's `references/`.
 
 ## Read first
 
-1. `docs/guides/figma-api-reference.md` — curated API with gotchas and correct examples
-2. `docs/guides/common-pitfalls.md` — the 15 most common mistakes and their fixes
-3. `docs/patterns/runtime-split.md` — which side owns which API
-4. `docs/patterns/messaging-bridge.md` — typed message contract
-5. `docs/snippets/main-thread.md` — main-thread starter with typed messages
-6. `docs/snippets/ui-iframe.md` — UI-side starter with type guards
+1. [`references/api-reference.md`](references/api-reference.md) — curated API with gotchas and correct examples
+2. [`references/common-pitfalls.md`](references/common-pitfalls.md) — the 16 most common mistakes and their fixes
+3. [`references/snippets/main-thread.md`](references/snippets/main-thread.md) — main-thread starter with typed messages
+4. [`references/snippets/ui-iframe.md`](references/snippets/ui-iframe.md) — UI-side starter with type guards
+5. [`references/snippets/manifest.md`](references/snippets/manifest.md) — manifest fields explained
 
-### Bundle mode note
-
-If files 1-2 above are not on disk, you are in bundle mode. The quick-references below cover the most critical patterns, but they are not a full replacement. For the complete API reference and the 15 pitfalls with detailed fixes, clone `figma-plugin-forge` as a sibling:
-
-```
-git clone https://github.com/sallzzbr/figma-plugin-forge.git ../figma-plugin-forge
-```
-
-Then read `../figma-plugin-forge/docs/guides/figma-api-reference.md` and `../figma-plugin-forge/docs/guides/common-pitfalls.md`.
+For the runtime split (which side owns which API) and the typed message contract, see [`../plugin-architecture/references/patterns/runtime-split.md`](../plugin-architecture/references/patterns/runtime-split.md) and [`../plugin-architecture/references/patterns/messaging-bridge.md`](../plugin-architecture/references/patterns/messaging-bridge.md).
 
 ## Before you write any Figma API code
 
-1. Read `docs/guides/common-pitfalls.md` and keep it open as a checklist.
-2. If setting up a new project, follow `docs/guides/project-setup.md` for the recommended stack.
+1. Read [`references/common-pitfalls.md`](references/common-pitfalls.md) and keep it open as a checklist.
+2. If setting up a new project, follow [`../plugin-architecture/references/project-setup.md`](../plugin-architecture/references/project-setup.md) for the recommended stack.
 3. Define the message contract in a single `types/messages.ts` file before writing main or UI code.
 
 ## Quick reference: type narrowing
@@ -136,4 +127,4 @@ Before finishing any Figma API work:
 
 ## Rule
 
-If you are unsure about an API, read `docs/guides/figma-api-reference.md` before guessing. The pitfalls doc exists because guessing is the most common source of bugs.
+If you are unsure about an API, read [`references/api-reference.md`](references/api-reference.md) before guessing. The pitfalls doc exists because guessing is the most common source of bugs.

@@ -1,0 +1,38 @@
+---
+description: figma-plugin-forge — method and knowledge for building Figma plugins. The skills/ folder is the source of truth.
+alwaysApply: true
+---
+
+# Building Figma plugins (figma-plugin-forge)
+
+This repo's `skills/` directory is the canonical knowledge. Each skill has a
+`SKILL.md` plus a `references/` folder. When building a Figma plugin, read the
+relevant skill instead of guessing.
+
+## Flow (don't skip to code)
+
+1. Brainstorm the idea into a design — `skills/brainstorming/`.
+2. Pick the closest pattern — `skills/plugin-architecture/references/patterns/`
+   (local-audit, llm-analysis, spec-generation, library-sync).
+3. Write a task-by-task plan — `skills/writing-plans/`.
+4. Scaffold by copying a verified template verbatim:
+   - no backend → `templates/starter-plugin/`
+   - with backend → `templates/starter-plugin-backend/`
+5. Implement, then verify the Definition of Done.
+
+## Non-negotiable rules
+
+- Runtime split: no `figma.*` in the UI iframe; no DOM / `fetch` / `btoa` in the
+  main thread. Network calls happen in the UI.
+- Every cross-thread message is a typed, type-guarded plain object — see
+  `templates/starter-plugin/src/types/messages.ts` and the bridge helpers.
+- `manifest.json`: `documentAccess: "dynamic-page"`; `networkAccess.allowedDomains`
+  non-empty and specific (`["none"]` if local-only; never `"*"`).
+- Backend code is vendor-agnostic with a local fallback —
+  `skills/figma-backend-integration/`.
+- API gotchas: `skills/figma-api-patterns/references/common-pitfalls.md`.
+
+## Definition of Done
+
+`npm run lint && npm run typecheck && npm test && npm run build`, then
+`node scripts/validate-scaffold.mjs --path <plugin-dir>`.

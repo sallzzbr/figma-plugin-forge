@@ -1,128 +1,60 @@
-# figma-plugin-forge - Agent Context
+# figma-plugin-forge — agent entrypoint
 
-## Repo contract
+This repo is a **Claude Code plugin** for building Figma plugins well — but the
+knowledge is plain markdown, so any AI (Codex, etc.) can use it. The `skills/`
+directory is the **single source of truth**; this file just routes you into it.
+(Cursor users: `.cursor/rules/` loads automatically. Claude Code: install the
+plugin and the skills/commands/agents activate.)
 
-This repository is a docs-first, assistant-agnostic base for designing and planning Figma plugins with AI.
+## When the user wants to build or change a Figma plugin
 
-Its primary outputs are:
+Do NOT jump to code. Follow the flow, reading the skill at each step:
 
-- workflow guidance
-- architecture patterns
-- reusable snippets
-- design doc and implementation plan templates
-- examples that prove the method
-- optional assistant skills and adapters
+1. **Brainstorm → design** — `skills/brainstorming/SKILL.md`. One question at a
+   time; produce a short design doc.
+2. **Pick a pattern** — `skills/plugin-architecture/SKILL.md` and
+   `skills/plugin-architecture/references/patterns/` (local-audit, llm-analysis,
+   spec-generation, library-sync).
+3. **Write a plan** — `skills/writing-plans/SKILL.md` (task-by-task, file paths,
+   verification steps).
+4. **Scaffold from a verified template — copy verbatim, do not retype config:**
+   - no backend → `templates/starter-plugin/`
+   - with backend → `templates/starter-plugin-backend/`
+5. **Implement** — `skills/figma-api-patterns/` (API + pitfalls),
+   `skills/plugin-architecture/` (runtime split + messaging),
+   `skills/figma-backend-integration/` (backend + fallback).
+6. **Review** — `skills/executing-plans/SKILL.md`; verify the Definition of Done.
 
-This repository is not a buildable monorepo of plugin applications. Implementation code should usually live in the user's target repo, not here, unless the user is explicitly improving this method repository.
+## Invariants (every generated plugin must hold)
 
-The one exception is [`templates/starter-plugin/`](templates/starter-plugin/): a single, build-verified scaffold that exists precisely so generation is deterministic. It is copied verbatim into the target repo as the starting point — not retyped from prose. `scripts/validate-scaffold.mjs` keeps it (and any plugin you point it at) honest about the basics.
+- **Runtime split.** Main thread = Figma sandbox: owns `figma.*`, selection,
+  traversal, export, clientStorage; NO DOM / `fetch` / `btoa` / `window` /
+  `document` / `localStorage`. UI iframe = rendering, input, `fetch`; NO `figma.*`.
+- **Typed messages.** Every main ↔ UI message is a typed, type-guarded plain
+  object (no raw nodes). See `templates/starter-plugin/src/types/messages.ts` and
+  the bridge helpers `bridge.ts` / `main-bridge.ts`.
+- **manifest.json.** `documentAccess: "dynamic-page"`; `networkAccess.allowedDomains`
+  non-empty and specific (`["none"]` if local-only; never `"*"`); `main`/`ui` exist
+  after build.
+- **Self-contained UI.** `build/ui.html` has no external `<script src>` / `<link
+  href>` and no leftover placeholders.
+- **Async API.** Node lookups use `figma.getNodeByIdAsync`; cross-page work calls
+  `await figma.loadAllPagesAsync()` first; `await figma.loadFontAsync(...)` before
+  editing text.
+- **Backend.** `fetch` only in the UI; wrap calls in a local fallback; ship only
+  public/anon keys (never secrets).
 
-## Canonical source of truth
+## Definition of Done
 
-`AGENTS.md` plus `docs/` are the canonical source of truth for this repo.
+`npm run lint && npm run typecheck && npm test && npm run build` in the plugin dir,
+then `node scripts/validate-scaffold.mjs --path <plugin-dir>`.
 
-If any skill, adapter, helper script, or assistant-specific metadata disagrees with `AGENTS.md` or `docs/`, follow `AGENTS.md` plus `docs/` and treat the other asset as stale.
+## Repo map
 
-Read [docs/guides/source-of-truth.md](docs/guides/source-of-truth.md) for ownership and conflict rules.
-
-## Reading hierarchy
-
-Use this order unless the user gives a more specific path:
-
-1. [docs/guides/source-of-truth.md](docs/guides/source-of-truth.md)
-2. [docs/guides/distribution-modes.md](docs/guides/distribution-modes.md)
-3. [docs/guides/spec-driven-workflow.md](docs/guides/spec-driven-workflow.md)
-4. The relevant pattern in [docs/patterns/README.md](docs/patterns/README.md)
-5. The matching snippet in [docs/snippets/README.md](docs/snippets/README.md) only if you need code shape
-6. The relevant template or filled example
-
-When writing implementation code, also read:
-
-7. [docs/guides/figma-api-reference.md](docs/guides/figma-api-reference.md) — curated API with gotchas and correct examples
-8. [docs/guides/common-pitfalls.md](docs/guides/common-pitfalls.md) — the most common mistakes
-9. [docs/guides/project-setup.md](docs/guides/project-setup.md) — opinionated stack for new projects
-10. [templates/starter-plugin/](templates/starter-plugin/) — the verified scaffold to copy; validate with `node scripts/validate-scaffold.mjs`
-
-## Responsibility by surface
-
-- `README.md`: human positioning and path selection
-- `AGENTS.md`: AI-facing contract, invariants, and routing
-- `docs/guides/`: usage and maintenance of the method, including `distribution-modes.md` for repo mode vs bundle mode
-- `docs/patterns/`: architecture and decision guidance
-- `docs/snippets/`: code references with context and limits
-- `docs/templates/`: blank artifacts
-- `docs/examples/`: filled artifacts that prove the method
-- `docs/plans/`: active, user-generated work artifacts
-- `templates/starter-plugin/`: the canonical, build-verified scaffold to copy when implementing
-- `scripts/`: validation — `validate-docs.mjs` (editorial drift) and `validate-scaffold.mjs` (plugin basics)
-- `skills/`: thin workflow adapters
-- `.claude-plugin/`, `.cursor-plugin/`, `.codex/`, `hooks/`: optional assistant-specific adapters
-
-## Standard workflow
-
-1. Clarify the plugin idea
-2. Pick the closest pattern
-3. Write a design doc
-4. Write an implementation plan
-5. Implement in the target repo — start by copying `templates/starter-plugin/` verbatim, then modify it. Do not re-derive `manifest.json`, `build.mjs`, or `tsconfig.json` from prose.
-6. Review against the plan, the runtime rules, and the Definition of Done below
-7. Feed reusable improvements back into this method repo
-
-## Definition of Done (every generated plugin must pass)
-
-Do not consider a plugin finished until all of these hold. `node scripts/validate-scaffold.mjs --path <plugin-dir>` checks the mechanical ones.
-
-- `npm run build` and `npm run typecheck` both succeed.
-- `manifest.json`: `documentAccess` is `"dynamic-page"`; `networkAccess.allowedDomains` is a non-empty array (`["none"]` if local-only); `main`/`ui` match the build output and those files exist after build.
-- `build/ui.html` is a single self-contained file — no external `<script src>` / `<link href>`, no leftover placeholders.
-- The main thread uses no browser-only APIs (`btoa`/`atob`, `fetch`, `window`, `document`, `localStorage`); use `figma.base64Encode`, `figma.clientStorage`, and do network calls from the UI. Conversely, UI files never reference `figma.*`.
-- Node access that touches pages other than the current one calls `await figma.loadAllPagesAsync()` first.
-- Every message crossing the main ↔ UI boundary is a typed, type-guarded plain object (no raw nodes).
-
-## Runtime rules
-
-Main thread:
-
-- Runs inside Figma's sandbox
-- Owns `figma.*`, selection, traversal, export, and client storage
-- Must not rely on DOM or browser-only APIs
-
-UI iframe:
-
-- Owns rendering, input, fetch, and browser helpers
-- Must not access `figma.*` directly
-
-Communication:
-
-- Cross the boundary explicitly with typed messages
-- Keep request and response shapes stable once documented
-- Document every contract that crosses runtime or backend boundaries
-
-## Working rules
-
-- Prefer AGENTS-first over tool-specific setup
-- Prefer patterns over fake framework packaging
-- Prefer explicit contracts over hidden conventions
-- Treat examples and snippets as illustrative, not canonical production code — but `templates/starter-plugin/` is canonical and verified; copy it verbatim rather than reconstructing it
-- Preserve assistant agnosticism unless the user explicitly asks for a tool-specific path
-
-## Assistant adapters
-
-- `CLAUDE.md` is an alias file for Claude-oriented tooling. It is not a filesystem symlink.
-- `.cursor-plugin/` and `hooks/` are optional Cursor-oriented adapters.
-- `.claude-plugin/` is intentionally lightweight metadata.
-- `.codex/README.md` documents the current Codex path. There is no `.codex-plugin` in this repository.
-
-Read [docs/guides/assistant-integrations.md](docs/guides/assistant-integrations.md) for the current adapter matrix, requirements, and limits.
-
-## Editorial drift checklist
-
-Before finishing changes to the method:
-
-- If `README.md` or `AGENTS.md` changed, review `docs/guides/assistant-integrations.md`
-- If a template changed, review `docs/examples/` and any skills that mention that template
-- If a pattern changed, review related snippets and skills that route to it
-- If an adapter changed, review the integration matrix and state runtime requirements explicitly
-- Confirm there are no machine-local absolute links in versioned docs
-
-Read [docs/guides/maintaining-the-method.md](docs/guides/maintaining-the-method.md) for the full maintenance checklist.
+- `skills/` — the method + knowledge (source of truth); each has `SKILL.md` + `references/`.
+- `commands/` — Claude Code slash commands: `/new-figma-plugin`, `/add-figma-backend`, `/review-figma-plugin`.
+- `agents/` — `figma-plugin-architect` (design) and `code-reviewer` (review).
+- `templates/` — `starter-plugin/` (local) and `starter-plugin-backend/` (backend); verified, copy verbatim.
+- `scripts/` — `validate-scaffold.mjs` (plugin basics) and `validate-links.mjs` (doc-link integrity).
+- `.cursor/rules/` — Cursor adapter pointing at `skills/`.
+- `.claude-plugin/` — Claude Code plugin manifest.

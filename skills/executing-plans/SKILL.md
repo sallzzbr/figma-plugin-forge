@@ -5,29 +5,24 @@ description: Use when a plan exists and it is time to implement task by task wit
 
 # Executing Implementation Plans
 
-This skill is a workflow adapter. The canonical method lives in `AGENTS.md` plus `docs/` (see [docs/guides/distribution-modes.md](../../docs/guides/distribution-modes.md) for repo mode vs bundle mode).
+Implement an approved plan one task at a time, verifying each before moving on.
 
 ## Read first
 
 1. the plan
 2. the linked design doc
-3. the relevant patterns
+3. the relevant patterns in [`../plugin-architecture/references/patterns/`](../plugin-architecture/references/patterns/index.md)
 4. the target repo structure
-5. `docs/guides/common-pitfalls.md` — keep open as a checklist during implementation
-
-### Bundle mode note
-
-If the task references a pattern file (e.g., `docs/patterns/local-audit.md`) that does not exist in the current workspace, you are in bundle mode. Clone `figma-plugin-forge` as a sibling directory and read from there:
-
-```
-git clone https://github.com/sallzzbr/figma-plugin-forge.git ../figma-plugin-forge
-```
-
-Then reference patterns as `../figma-plugin-forge/docs/patterns/local-audit.md`. Do not skip pattern reading — it defines the architecture the plan assumes.
+5. [`../figma-api-patterns/references/common-pitfalls.md`](../figma-api-patterns/references/common-pitfalls.md) — keep open as a checklist during implementation
 
 ## Scaffold first
 
-When the plan creates a new plugin (rather than editing an existing one), the first task is to copy [`templates/starter-plugin/`](../../templates/starter-plugin/) into the target repo verbatim, then adapt it. Do not retype `manifest.json`, `build.mjs`, or `tsconfig.json` from the guides — that is where the "basic things wrong" come from. The scaffold already encodes the correct manifest, build, and runtime wiring.
+When the plan creates a new plugin (rather than editing an existing one), the first task is to copy a verified template into the target repo verbatim, then adapt it:
+
+- [`templates/starter-plugin/`](../../templates/starter-plugin/) for a local-only plugin, or
+- [`templates/starter-plugin-backend/`](../../templates/starter-plugin-backend/) when it needs a backend.
+
+Do not retype `manifest.json`, `build.mjs`, or `tsconfig.json` from the references — that is where the "basic things wrong" come from. The scaffold already encodes the correct manifest, build, and runtime wiring.
 
 ## Execution checklist
 
@@ -52,7 +47,14 @@ If the verification command cannot be run in the current environment, say so exp
 
 If the verification output is ambiguous, surface it to the user with the raw output and the expected shape, and wait for a decision before continuing.
 
-Before declaring the whole plugin done, run the Definition of Done in `AGENTS.md` — including `node scripts/validate-scaffold.mjs --path <plugin-dir>` (or, in bundle mode, `../figma-plugin-forge/scripts/validate-scaffold.mjs`) plus `npm run build` and `npm run typecheck` in the plugin.
+## Definition of Done
+
+Before declaring the whole plugin done:
+
+- `node scripts/validate-scaffold.mjs --path <plugin-dir>` passes;
+- `npm run build` and `npm run typecheck` succeed in the plugin;
+- the manifest has a real `id`, `documentAccess: "dynamic-page"`, and a specific `networkAccess.allowedDomains`;
+- the plugin imports and runs in Figma against the design doc's verification criteria.
 
 ## Doc-sync rule
 

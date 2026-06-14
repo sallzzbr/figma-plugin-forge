@@ -1,0 +1,13 @@
+{
+  "name": "Starter Plugin (Backend)",
+  "id": "REPLACE_WITH_PLUGIN_ID",
+  "api": "1.0.0",
+  "editorType": ["figma"],
+  "main": "build/main.js",
+  "ui": "build/ui.html",
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["https://your-backend.example.com"],
+    "reasoning": "Sends the current selection to the backend for analysis."
+  }
+}

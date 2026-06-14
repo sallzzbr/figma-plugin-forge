@@ -5,34 +5,40 @@ description: Use when questions arise about plugin structure, runtime split, man
 
 # Plugin Architecture
 
-This skill is a workflow adapter. The canonical method lives in `AGENTS.md` plus `docs/`.
+Decision guidance for plugin structure, with the full pattern catalog in this skill's `references/`.
 
 ## Read first
 
-1. `docs/guides/project-setup.md` — opinionated stack and file structure
-2. `docs/patterns/runtime-split.md` — which code goes where
-3. `docs/patterns/messaging-bridge.md` — typed message contract
-4. `docs/patterns/optional-backend.md` — when and how to add a backend
-5. `docs/patterns/shared-concerns.md` — when to extract shared code
+1. [`references/project-setup.md`](references/project-setup.md) — opinionated stack and file structure
+2. [`references/patterns/index.md`](references/patterns/index.md) — the pattern catalog (archetypes + supporting decisions)
+3. [`references/snippets/messaging-bridge.md`](references/snippets/messaging-bridge.md) — typed message contract code shape
 
-Then read the matching snippet in `docs/snippets/` only if you need code shape.
+## Archetypes
 
-### Bundle mode note
+Four archetypes cover most plugins. Read the one closest to your idea:
 
-If the files above are not on disk, you are in bundle mode. The decision trees and setup summary below work standalone. For the full pattern docs and project-setup walkthrough, clone `figma-plugin-forge` as a sibling:
+- [`local-audit`](references/patterns/local-audit.md) — traverse the page, apply pure rules (a11y, naming, spacing), return findings. No backend.
+- [`llm-analysis`](references/patterns/llm-analysis.md) — export selection, send to an (optional) backend that calls an LLM, render structured feedback.
+- [`spec-generation`](references/patterns/spec-generation.md) — turn a selection into a structured artifact (spec, JSON, QA doc). Optional backend for enrichment.
+- [`library-sync`](references/patterns/library-sync.md) — read library component/variable state and diff local vs remote. Optional backend for persistence.
+
+Supporting decisions: [`runtime-split`](references/patterns/runtime-split.md), [`messaging-bridge`](references/patterns/messaging-bridge.md), [`optional-backend`](references/patterns/optional-backend.md), [`shared-concerns`](references/patterns/shared-concerns.md).
+
+## Decision tree: which archetype?
 
 ```
-git clone https://github.com/sallzzbr/figma-plugin-forge.git ../figma-plugin-forge
+Does the plugin inspect existing nodes and return findings?
+  → local-audit
+
+Does the plugin send data to an LLM and return structured feedback?
+  → llm-analysis
+
+Does the plugin turn a selection into a structured artifact (spec, JSON, doc)?
+  → spec-generation
+
+Does the plugin sync or compare library/token state?
+  → library-sync
 ```
-
-### Archetype summaries (for bundle mode)
-
-If you cannot read the full pattern files, here are one-paragraph summaries:
-
-- **local-audit** — Main thread traverses the current page, applies pure rules (accessibility, naming, spacing), and returns findings. UI renders filters, severity groups, and focus-back navigation. No backend. No network calls. Settings in client storage.
-- **llm-analysis** — Main thread exports selected frames. UI collects user context, sends exports + context to an optional backend that calls an LLM, and renders structured feedback. Backend is optional but typical.
-- **spec-generation** — Main thread extracts structured data from selected nodes (layout, tokens, constraints). UI renders a JSON preview with copy/download. Optional backend for enrichment. Schema is versioned and stable.
-- **library-sync** — Main thread reads library component and variable state. UI shows diffs between local and remote state. Optional backend for persistence. Fingerprinting and diff logic are the core concerns.
 
 ## Decision tree: do I need a backend?
 
@@ -47,34 +53,28 @@ Does the plugin call an external API (LLM, search, storage)?
 
 Can the external API be called directly from the UI iframe?
   YES, and no secret keys are needed → call from UI, no backend.
-  NO, or secret keys are involved → add a backend. Use the optional-backend pattern.
+  NO, or secret keys are involved → add a backend.
 ```
 
-## Decision tree: which archetype?
+When a backend is involved, switch to the [`figma-backend-integration`](../figma-backend-integration/SKILL.md) skill.
 
-```
-Does the plugin inspect existing nodes and return findings?
-  → local-audit (docs/patterns/local-audit.md)
+## Verified templates
 
-Does the plugin send data to an LLM and return structured feedback?
-  → llm-analysis (docs/patterns/llm-analysis.md)
+Two build-verified scaffolds live under `templates/` — copy one verbatim, then adapt. Never retype `manifest.json`, `build.mjs`, or `tsconfig.json` from the prose.
 
-Does the plugin turn a selection into a structured artifact (spec, JSON, doc)?
-  → spec-generation (docs/patterns/spec-generation.md)
+- [`templates/starter-plugin/`](../../templates/starter-plugin/) — local-only plugin (no network).
+- [`templates/starter-plugin-backend/`](../../templates/starter-plugin-backend/) — the local starter plus a vendor-agnostic backend layer and local fallback.
 
-Does the plugin sync or compare library/token state?
-  → library-sync (docs/patterns/library-sync.md)
-```
+The typed message bridge lives in the local starter at [`src/types/messages.ts`](../../templates/starter-plugin/src/types/messages.ts) (the contract), [`src/bridge.ts`](../../templates/starter-plugin/src/bridge.ts) (UI side), and [`src/main-bridge.ts`](../../templates/starter-plugin/src/main-bridge.ts) (main side).
 
 ## Setting up a new project
 
-Follow `docs/guides/project-setup.md` for the full walkthrough. Summary:
+Follow [`references/project-setup.md`](references/project-setup.md) for the full walkthrough. Summary:
 
-1. Create `manifest.json`, `package.json`, `tsconfig.json`
-2. Install `@figma/plugin-typings`, `esbuild`, `typescript`, `preact`
-3. Create `src/main.ts` (Figma sandbox), `src/ui.tsx` (iframe), `src/types/messages.ts` (contract)
-4. Create `build.mjs` that bundles main and inlines UI HTML
-5. `npm run build`, import manifest in Figma, test
+1. Copy a template from `templates/` instead of hand-building the scaffold.
+2. Set `manifest.json` `id`, keep `documentAccess: "dynamic-page"`, and make `networkAccess.allowedDomains` specific.
+3. Keep `src/main.ts` (Figma sandbox), `src/ui.tsx` (iframe), and `src/types/messages.ts` (contract) as the three anchors.
+4. `npm run build`, import the manifest in Figma, test.
 
 ## Checklist
 
@@ -83,9 +83,9 @@ Follow `docs/guides/project-setup.md` for the full walkthrough. Summary:
 - [ ] manifest declares only the capabilities actually used
 - [ ] backend is added only when needed, not by default
 - [ ] shared concerns are extracted only after real reuse appears
-- [ ] project setup follows `docs/guides/project-setup.md` or the user's equivalent
-- [ ] `docs/guides/common-pitfalls.md` has been read before writing API code
+- [ ] project setup follows [`references/project-setup.md`](references/project-setup.md) or the user's equivalent
+- [ ] [`../figma-api-patterns/references/common-pitfalls.md`](../figma-api-patterns/references/common-pitfalls.md) has been read before writing API code
 
 ## Rule
 
-Keep architectural decisions anchored in the target repo, not in this method repo. This skill helps you make the decision; the implementation lives elsewhere.
+This skill helps you make the architectural decision; the implementation lives in the target repo. Anchor decisions there, not in this method repo.

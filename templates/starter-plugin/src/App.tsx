@@ -1,72 +1,95 @@
-// UI iframe (regular browser context). Owns rendering, input, and fetch.
-// figma.* does NOT exist here — request data from the main thread via messages.
+// UI iframe (browser context). Owns rendering, input, and fetch. figma.* does
+// NOT exist here — talk to the main thread through the typed bridge (./bridge).
 
 import { useEffect, useState } from 'preact/hooks'
-import {
-  isMainToUiMessage,
-  type SelectionItem,
-  type UiToMainMessage,
-} from './types/messages'
+import { onMainEvent, request, sendEvent } from './bridge'
+import { Button, ErrorBanner, Input, Spinner } from './components'
+import type { SelectionItem } from './types/messages'
 
-function postToMain(message: UiToMainMessage): void {
-  // The pluginMessage wrapper and '*' origin are required by Figma.
-  parent.postMessage({ pluginMessage: message }, '*')
-}
+const NOTES_KEY = 'starter:notes'
 
 export default function App() {
   const [items, setItems] = useState<SelectionItem[]>([])
   const [pageName, setPageName] = useState('')
+  const [notes, setNotes] = useState('')
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Subscribe to selection events from the main thread (fire-and-forget).
+  useEffect(
+    () =>
+      onMainEvent((event) => {
+        setItems(event.items)
+        setPageName(event.pageName)
+      }),
+    [],
+  )
+
+  // Load persisted notes once on open (round-trip to clientStorage).
   useEffect(() => {
-    const onMessage = (event: MessageEvent) => {
-      const payload = (event.data as { pluginMessage?: unknown } | undefined)?.pluginMessage
-      if (!isMainToUiMessage(payload)) return
-
-      switch (payload.type) {
-        case 'selection-changed':
-          setItems(payload.items)
-          setPageName(payload.pageName)
-          setError(null)
-          break
-        case 'focus-node-error':
-          setError(payload.message)
-          break
-      }
-    }
-
-    window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
+    request('get-storage', { key: NOTES_KEY })
+      .then((value) => setNotes(value ?? ''))
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false))
   }, [])
 
+  async function saveNotes(): Promise<void> {
+    setError(null)
+    try {
+      await request('set-storage', { key: NOTES_KEY, value: notes })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="p-3">
+        <Spinner label="Loading…" />
+      </div>
+    )
+  }
+
   return (
-    <div className="p-3">
-      <h1 className="text-figma-base font-semibold mb-2">Selection</h1>
-      <p className="text-figma-sm text-figma-text-secondary mb-2">
-        {pageName ? `Page: ${pageName}` : 'No page'} · {items.length} item(s)
-      </p>
-      {error && (
-        <p role="alert" className="text-figma-sm text-red-400 mb-2">
-          {error}
-        </p>
-      )}
-      <ul className="space-y-1">
-        {items.map((item) => (
-          <li key={item.id}>
-            <button
-              className="w-full text-left px-2 py-1 rounded bg-figma-bg hover:bg-figma-bg-hover text-figma-sm"
-              onClick={() => postToMain({ type: 'focus-node', nodeId: item.id })}
-            >
-              {item.name} <span className="text-figma-text-secondary">({item.type})</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-      {items.length === 0 && (
+    <div className="p-3 space-y-3">
+      <header>
+        <h1 className="text-figma-base font-semibold">Starter Plugin</h1>
         <p className="text-figma-sm text-figma-text-secondary">
-          Select one or more layers on the canvas.
+          {pageName ? `Page: ${pageName}` : 'No page'} · {items.length} selected
         </p>
-      )}
+      </header>
+
+      {error && <ErrorBanner message={error} />}
+
+      <section className="space-y-1">
+        {items.length === 0 ? (
+          <p className="text-figma-sm text-figma-text-secondary">
+            Select one or more layers on the canvas.
+          </p>
+        ) : (
+          <ul className="space-y-1">
+            {items.map((item) => (
+              <li key={item.id}>
+                <button
+                  className="w-full text-left px-2 py-1 rounded bg-figma-bg hover:bg-figma-bg-hover text-figma-sm"
+                  onClick={() => sendEvent({ type: 'focus-node', nodeId: item.id })}
+                >
+                  {item.name}{' '}
+                  <span className="text-figma-text-secondary">({item.type})</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="space-y-1">
+        <label className="text-figma-sm text-figma-text-secondary" htmlFor="notes">
+          Notes (persisted via clientStorage)
+        </label>
+        <Input id="notes" value={notes} onValue={setNotes} placeholder="Type a note…" />
+        <Button onClick={saveNotes}>Save</Button>
+      </section>
     </div>
   )
 }

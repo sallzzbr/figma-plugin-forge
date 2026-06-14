@@ -14,11 +14,15 @@
  *     4. Runtime split across all src files: main-side files use no browser-only
  *        APIs the sandbox lacks (btoa/atob, fetch, window, document, localStorage),
  *        and UI-side files never reference figma.* (which exists only in main).
+ *     5. Project health: package.json declares build/typecheck/lint/test scripts,
+ *        at least one test file exists, and no obvious secrets live in src/.
+ *     6. Backend (only when src/backend/ exists): networkAccess declares real
+ *        domains (not ["none"]) and backend files (UI context) never use figma.*.
  *
  *   Build (when node_modules is present, or with --build):
- *     5. `npm run build` succeeds.
- *     6. The files named by manifest.main and manifest.ui exist after build.
- *     7. build ui.html is self-contained: no external <script src=> / <link href=>
+ *     7. `npm run build` succeeds.
+ *     8. The files named by manifest.main and manifest.ui exist after build.
+ *     9. build ui.html is self-contained: no external <script src=> / <link href=>
  *        and no leftover CSS_PLACEHOLDER / JS_PLACEHOLDER.
  *
  * Usage:
@@ -187,6 +191,71 @@ function checkRuntimeBoundaries() {
   }
 }
 
+// ---------- project health (scripts + tests + secrets) ----------
+
+// Obvious secrets that must never ship inside a plugin (src/ is fully readable).
+const SECRET_PATTERNS = [
+  { re: /service_role/i, hint: 'service_role key' },
+  { re: /-----BEGIN [A-Z ]*PRIVATE KEY-----/, hint: 'private key' },
+  { re: /\bsk-[A-Za-z0-9]{20,}/, hint: 'secret API key (sk-...)' },
+  { re: /eyJ[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{8,}/, hint: 'hardcoded JWT' },
+]
+
+function readPackageJson() {
+  const pkgPath = join(PLUGIN_DIR, 'package.json')
+  if (!existsSync(pkgPath)) {
+    fail('package.json not found')
+    return null
+  }
+  try {
+    return JSON.parse(readFileSync(pkgPath, 'utf8'))
+  } catch (err) {
+    fail(`package.json is not valid JSON: ${err.message}`)
+    return null
+  }
+}
+
+function checkProjectHealth(pkg) {
+  if (!pkg) return
+  const scripts = pkg.scripts || {}
+  for (const name of ['build', 'typecheck', 'lint', 'test']) {
+    if (!scripts[name]) fail(`package.json is missing the "${name}" script`)
+  }
+  const tests = walkSrcFiles(join(PLUGIN_DIR, 'src')).filter((f) => /\.(test|spec)\.tsx?$/.test(f))
+  if (tests.length === 0) {
+    fail('no test files found (expected at least one src/**/*.test.ts)')
+  }
+
+  for (const file of walkSrcFiles(join(PLUGIN_DIR, 'src'))) {
+    const raw = readFileSync(file, 'utf8')
+    const rel = file.slice(PLUGIN_DIR.length + 1).split('\\').join('/')
+    for (const { re, hint } of SECRET_PATTERNS) {
+      if (re.test(raw)) fail(`${rel} appears to contain a ${hint}; never ship secrets in plugin source`)
+    }
+  }
+}
+
+// ---------- backend checks ----------
+
+function checkBackend(manifest) {
+  const backendDir = join(PLUGIN_DIR, 'src', 'backend')
+  if (!existsSync(backendDir)) return
+
+  const domains = manifest && manifest.networkAccess && manifest.networkAccess.allowedDomains
+  if (Array.isArray(domains) && domains.length === 1 && domains[0] === 'none') {
+    fail('src/backend/ exists but networkAccess.allowedDomains is ["none"]; declare the backend origin(s)')
+  }
+
+  // Backend code runs in the UI iframe; it must not touch figma.*.
+  for (const file of walkSrcFiles(backendDir)) {
+    const code = stripCommentsAndStrings(readFileSync(file, 'utf8'))
+    const rel = file.slice(PLUGIN_DIR.length + 1).split('\\').join('/')
+    if (/\bfigma\s*\./.test(code)) {
+      fail(`${rel} (backend, UI context) references figma.*; backend code runs in the UI iframe`)
+    }
+  }
+}
+
 // ---------- build checks ----------
 
 function run(cmd, cmdArgs) {
@@ -253,6 +322,8 @@ console.log('')
 const manifest = loadManifest()
 checkManifest(manifest)
 checkRuntimeBoundaries()
+checkProjectHealth(readPackageJson())
+checkBackend(manifest)
 
 const built = maybeBuild()
 if (built) {

@@ -1,61 +1,75 @@
-# Starter Plugin — verified Figma plugin scaffold
+# Starter Plugin (local-only)
 
-This is the **canonical, build-verified starter** for figma-plugin-forge. Copy this whole
-directory into the target repo and modify it — do **not** re-derive the manifest, build
-script, or tsconfig from prose. Every basic that Figma requires to run is already correct
-here, and `scripts/validate-scaffold.mjs` keeps it that way.
-
-## Stack
-
-esbuild + Preact + Tailwind + TypeScript + `@figma/plugin-typings`. Lightweight, transparent,
-minimal dependencies. (For the heavier-but-proven `@create-figma-plugin` alternative, see
-`docs/guides/project-setup.md`.)
+A minimal, production-shaped Figma plugin: a typed message bridge, a small UI
+component set, Tailwind v4, tests, and lint. Copy this folder, rename it, and
+build from here. For a plugin that calls a backend, start from
+`../starter-plugin-backend/` instead.
 
 ## What it does
 
-A minimal but complete plugin: it lists the current selection in the UI iframe and lets you
-click a layer to focus it on the canvas. It exercises the two things every plugin needs —
-the typed `main <-> UI` message bridge and async node access under `dynamic-page`.
+Lists the current selection (click an item to focus it on the canvas) and
+persists a note via `figma.clientStorage`. This exercises both bridge channels:
+fire-and-forget **events** and typed **request/response**.
+
+## Stack
+
+- **esbuild** (custom `build.mjs`) — bundles `main` + `ui` and inlines CSS/JS
+  into one self-contained `build/ui.html` (the iframe can't fetch sibling files).
+- **Preact** — small UI runtime.
+- **Tailwind CSS v4** — styling via `@theme` tokens in `src/input.css` (no JS config).
+- **TypeScript**, **ESLint** (flat config), **Prettier**, **Vitest**.
 
 ## Layout
 
 ```text
-manifest.json        # documentAccess: dynamic-page, networkAccess: ["none"], paths match build/
-build.mjs            # esbuild; produces build/main.js + a single-file build/ui.html
-src/main.ts          # Figma sandbox entry (figma.*, selection, viewport)
-src/ui.tsx           # UI iframe entry (mounts <App/>)
-src/App.tsx          # Preact UI; talks to main only via typed messages
-src/types/messages.ts# the message contract (imported by both sides)
-src/ui.html          # HTML shell; CSS/JS inlined at build into build/ui.html
-src/input.css        # Tailwind entry
+src/
+  main.ts            main thread (Figma sandbox): figma.*, selection, storage
+  main-bridge.ts     main side of the bridge: emit() + serve()
+  bridge.ts          UI side of the bridge: sendEvent() + request() + onMainEvent()
+  types/messages.ts  the message contract (events + typed request registry)
+  ui.tsx / App.tsx   UI iframe entry + root component
+  components/        reusable Preact components (Button, Input, Spinner, ErrorBanner)
+  input.css          Tailwind v4 entry + design tokens
+build.mjs            bundler + Tailwind + HTML inlining
+manifest.json        set id + networkAccess before publishing
 ```
 
-## Build & run
+## Commands
 
 ```bash
 npm install
-npm run build       # -> build/main.js and build/ui.html
+npm run build       # one-off build into build/
+npm run watch       # rebuild on change
 npm run typecheck   # tsc --noEmit
-npm run watch       # rebuilds build/ui.html on every change
+npm run lint        # eslint
+npm test            # vitest
+npm run format      # prettier --write
 ```
 
-Load in **Figma Desktop**: Plugins → Development → Import plugin from manifest → select this
-`manifest.json`. Re-run the plugin after each build (Figma plugins have no hot reload).
+Load in **Figma Desktop**: Plugins → Development → Import plugin from manifest →
+select this `manifest.json`. Re-run the plugin after each build (no hot reload).
 
-## Before publishing
+## Before you publish
 
-- Replace `"id": "REPLACE_WITH_PLUGIN_ID"` in `manifest.json` with the ID from the
-  [Figma Plugin Dashboard](https://www.figma.com/developers).
-- If the UI makes network calls, add the domains to `networkAccess.allowedDomains`
-  (keep `["none"]` for local-only plugins — never an empty array, never omit the field).
+- Set `manifest.json` `id` (Figma → Plugins → Development → New plugin… copies an id).
+- Keep `networkAccess.allowedDomains` as `["none"]` unless you call a backend.
 - Keep `documentAccess` as `"dynamic-page"`; to read nodes on other pages, call
   `await figma.loadAllPagesAsync()` first.
 
-## Key correctness rules baked in
+## Correctness rules baked in
 
-- `__html__` is the contents of the `ui` file, injected by Figma at runtime — the bundler
-  does not put HTML into `main.js`. `build/ui.html` must stay self-contained (CSS+JS inline).
-- The main thread sandbox has no DOM/browser APIs: no `window`, no `fetch`, no `btoa`.
-  Use `figma.base64Encode()` for binary, and do network calls from the UI iframe.
+- `__html__` is the contents of the `ui` file, injected by Figma at runtime — the
+  bundler does not put HTML into `main.js`. `build/ui.html` stays self-contained.
+- The sandbox has no DOM/browser APIs: no `window`, `fetch`, or `btoa` in `main.ts`.
+  Use `figma.base64Encode()` and do network calls from the UI iframe.
 - Node access under `dynamic-page` is async: `figma.getNodeByIdAsync(id)`.
 - Messages cross the boundary as typed, type-guarded plain objects — never raw nodes.
+
+## Adding a message
+
+Edit `src/types/messages.ts`:
+
+- A one-way notification → add to `MainEvent` (main → UI) or `UiEvent` (UI → main).
+- A round-trip call → add a key to `RequestRegistry`, then implement it in the
+  `serve({ … })` map in `main.ts`. The UI calls it with `request('your-kind', params)`
+  and gets a typed result back.

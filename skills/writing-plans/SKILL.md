@@ -5,14 +5,14 @@ description: Use after a design doc is approved to create a task-by-task impleme
 
 # Writing Implementation Plans
 
-This skill is a workflow adapter. The canonical method lives in `AGENTS.md` plus `docs/` (see [docs/guides/distribution-modes.md](../../docs/guides/distribution-modes.md) for repo mode vs bundle mode).
+Turn an approved design doc into a decision-complete, task-by-task plan.
 
 ## Read first
 
 1. the approved design doc
-2. the relevant pattern docs
-3. [docs/templates/implementation-plan.md](../../docs/templates/implementation-plan.md)
-4. [docs/guides/distribution-modes.md](../../docs/guides/distribution-modes.md)
+2. the relevant patterns in [`../plugin-architecture/references/patterns/`](../plugin-architecture/references/patterns/index.md)
+3. the plan template: [`references/plan-template.md`](references/plan-template.md)
+4. a worked example pair in [`references/examples/`](references/examples/README.md)
 
 ## Checklist
 
@@ -37,88 +37,16 @@ A plan is decision-complete when all of the following are true:
 
 If any of these are missing, the plan is not ready to execute. Return to the design doc or ask the user the missing question.
 
+## Examples
+
+The [`references/examples/`](references/examples/README.md) folder holds three filled design-doc + implementation-plan pairs (one each for `llm-analysis`, `local-audit`, and `spec-generation`). Use the closest one to anchor the shape and depth of your own plan.
+
 ## Output
 
 Save the plan to:
 
-- `docs/plans/YYYY-MM-DD-<feature-slug>.md` in the current workspace if a `docs/plans/` directory exists (repo mode or any target repo that already uses this layout); or
-- the same `figma-plugin-forge-plans/` directory used by the matching design doc; or
+- `docs/plans/YYYY-MM-DD-<feature-slug>.md` in the target repo if that repo already uses a `docs/plans/` layout; or
+- the same directory used by the matching design doc; or
 - a path the user explicitly chooses.
 
-Never write the file to an implicit or guessed path.
-
-## Embedded implementation-plan template (mirror)
-
-> Mirror provenance: [docs/templates/implementation-plan.md](../../docs/templates/implementation-plan.md). Canonical file wins on conflict. Drift-checked by `scripts/validate-docs.mjs`.
-
-```markdown
-# <Feature Name> - Implementation Plan
-
-**Date**: YYYY-MM-DD
-**Design doc**: <path to design doc>
-**Target repo**: <path, repo name, or "new project">
-**Assumed repo structure**: <one-line summary of folders or files the plan assumes exist>
-**Status**: Draft | Approved | In Progress | Done
-
-> For assistants: use the `executing-plans` skill to implement this plan task by task.
-
-## Goal
-
-One paragraph describing what this plan achieves and why.
-
-## Scope
-
-- Included:
-- Excluded:
-
-## Tasks
-
-### Task 1: <Short title>
-
-**Files to create or modify**
-
-- <relative path>
-
-**Outcome**
-
-Describe the exact result this task should produce.
-
-**Verification**
-
-Describe the command, manual check, or observable behavior that proves the task is done.
-
-**Commit message**
-
-`feat(<area>): <what this task accomplished>`
-
-### Task 2: <Short title>
-
-**Files to create or modify**
-
-- <relative path>
-
-**Outcome**
-
-Describe the exact result this task should produce.
-
-**Verification**
-
-Describe the command, manual check, or observable behavior that proves the task is done.
-
-**Commit message**
-
-`feat(<area>): <what this task accomplished>`
-
-## Post-completion checklist
-
-- [ ] All tasks were implemented
-- [ ] Verification was run and read
-- [ ] Design doc and plan still match reality
-- [ ] Runtime boundaries stayed clear
-- [ ] Contract changes were documented
-- [ ] The assumed repo structure was still accurate
-```
-
-## Maintenance note
-
-If you change the canonical template in [docs/templates/implementation-plan.md](../../docs/templates/implementation-plan.md), also update the mirror above and run `node scripts/validate-docs.mjs` to confirm the drift check passes. Review [docs/examples/](../../docs/examples/) and [docs/guides/maintaining-the-method.md](../../docs/guides/maintaining-the-method.md) for knock-on changes.
+Never write the file to an implicit or guessed path. Then hand off to the [`executing-plans`](../executing-plans/SKILL.md) skill to implement it task by task.

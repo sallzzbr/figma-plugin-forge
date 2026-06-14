@@ -1,44 +1,46 @@
 ---
 name: using-figma-plugin-forge
-description: Use when starting any conversation in a figma-plugin-forge context to route into the docs-first workflow
+description: Use when starting any conversation about building or changing a Figma plugin with figma-plugin-forge — routes into the spec-driven workflow and the right skill
 ---
 
 # Using Figma Plugin Forge
 
-This skill is a thin adapter. The canonical method lives in `AGENTS.md` plus `docs/`.
+This is the router. It describes the end-to-end method and points to the skill for each step. The `skills/` tree is the single source of truth; the `templates/` directory holds the canonical, build-verified scaffolds that implementation copies from.
 
-## Read first
+## The workflow
 
-1. `AGENTS.md`
-2. `docs/guides/source-of-truth.md`
-3. `docs/guides/distribution-modes.md`
-4. `docs/guides/spec-driven-workflow.md`
+Build a plugin as a short sequence. Use the smallest next skill for the step you are on.
 
-## Then choose the smallest next skill
+1. **Clarify the idea** → [`brainstorming`](../brainstorming/SKILL.md)
+   Walk the nine-area checklist until the design is decision-complete, then write a design doc.
+2. **Pick the architecture** → [`plugin-architecture`](../plugin-architecture/SKILL.md)
+   Choose an archetype (local-audit, llm-analysis, spec-generation, library-sync) and decide whether a backend is needed.
+3. **Write the plan** → [`writing-plans`](../writing-plans/SKILL.md)
+   Turn the approved design into a task-by-task plan with files, verification, and commit messages.
+4. **Scaffold from a template**
+   Copy [`templates/starter-plugin/`](../../templates/starter-plugin/) (local) or [`templates/starter-plugin-backend/`](../../templates/starter-plugin-backend/) (backend) verbatim, then adapt. Never reconstruct the manifest/build/config from prose.
+5. **Implement** → [`executing-plans`](../executing-plans/SKILL.md)
+   Work task by task, verifying each, until the Definition of Done passes.
+6. **Review and feed back**
+   If implementation teaches you something new about the method, update the relevant skill or its `references/`.
 
-- `brainstorming`
-- `writing-plans`
-- `executing-plans`
-- `figma-api-patterns`
-- `plugin-architecture`
+## Cross-cutting skills
 
-## Mode awareness
+Pull these in whenever the step needs them:
 
-This skill works in both modes (see `docs/guides/distribution-modes.md`):
+- [`figma-api-patterns`](../figma-api-patterns/SKILL.md) — Figma Plugin API surfaces, pitfalls, and code snippets.
+- [`figma-backend-integration`](../figma-backend-integration/SKILL.md) — when the plugin needs a backend (LLM calls, shared state, auth).
 
-- **Repo mode**: the workspace is a checkout of `figma-plugin-forge`. `docs/` is on disk. The skills route into the canonical patterns, templates, and examples directly.
-- **Bundle mode**: the workspace is a different target repo and `docs/` is not present. The workflow skills (`brainstorming`, `writing-plans`) still work because they carry a mirrored template shape inline. You lose direct access to the pattern catalog, full examples, and guides.
+## Source of truth
 
-If you are in bundle mode and need the full pattern catalog or an end-to-end example, recommend that the user clone `figma-plugin-forge` as a sibling directory or open it in a second workspace. Do not try to reconstruct a pattern or example from memory.
-
-## Rule
-
-If this skill ever disagrees with `AGENTS.md` or `docs/`, follow `AGENTS.md` plus `docs/`.
+- The skills (their `SKILL.md` plus `references/`) are canonical for the method.
+- The templates under `templates/` are canonical for code — they are verified to build and run, so copy them rather than retyping scaffolding.
+- When code and prose disagree, the verified template wins for code; the skill wins for method.
 
 ## Implementing a plugin
 
-When it is time to write code, copy [`templates/starter-plugin/`](../../templates/starter-plugin/) verbatim as the starting point and adapt it — do not reconstruct the manifest/build/config from the guides. Validate with `node scripts/validate-scaffold.mjs --path <plugin-dir>` and check the Definition of Done in `AGENTS.md`.
+When it is time to write code, copy a template verbatim as the starting point and adapt it. Validate with `node scripts/validate-scaffold.mjs --path <plugin-dir>` and check the Definition of Done in the [`executing-plans`](../executing-plans/SKILL.md) skill.
 
-## Maintenance note
+## Maintenance
 
-If you change templates, patterns, or integration docs, review `docs/guides/maintaining-the-method.md` and run `node scripts/validate-docs.mjs` to catch mirror drift. If you change `templates/starter-plugin/`, run `node scripts/validate-scaffold.mjs --build` to confirm it still compiles cleanly.
+If you change templates, patterns, snippets, or any skill, review [`references/maintaining-the-method.md`](references/maintaining-the-method.md). If you change `templates/starter-plugin/`, run `node scripts/validate-scaffold.mjs --build` to confirm it still compiles cleanly.
